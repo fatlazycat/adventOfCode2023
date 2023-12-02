@@ -7,37 +7,6 @@ class Day2Test : XCTestCase {
     
     func testDay2Part1Dummy() {
         parseGames(lines: part1DummyData)
-        
-        //        let games = part1DummyData.map {
-        //            try! rowParser.parse($0)
-        //        }
-//        let roundData = "8 green, 6 blue, 20 red"
-//        let roundsData = "8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red"
-//        
-//        let roundParser = Parse(input: Substring.self) {
-//            Many {
-//                Whitespace()
-//                Int.parser()
-//                Whitespace()
-//                Prefix { $0 != "," && $0 != ";" }
-//            } separator: {
-//                ","
-//            }
-//        }
-//        
-//        let roundsParser = Parse(input: Substring.self) {
-//            Many {
-//                roundParser
-//            } separator: {
-//                ";"
-//            }
-//        }
-//        
-//        let round = try! roundParser.parse(roundData)
-//        let rounds = try! roundsParser.parse(roundsData)
-//        
-//        print(round)
-//        print(rounds)
     }
     
     func parseGames(lines: [String]) -> [Game] {
@@ -46,7 +15,11 @@ class Day2Test : XCTestCase {
                 Whitespace()
                 Int.parser()
                 Whitespace()
-                Prefix { $0 != "," && $0 != ";" }
+                OneOf {
+                    "green".map { Colour.green }
+                    "red".map { Colour.red }
+                    "blue".map { Colour.blue }
+                }
             } separator: {
                 ","
             }
@@ -100,13 +73,19 @@ class Day2Test : XCTestCase {
     
     struct Game {
         let id: Int
-        let rounds: [[(Int, Substring)]]
+        let rounds: [[(Int, Colour)]]
+    }
+    
+    enum Colour: Equatable {
+        case green
+        case red
+        case blue
     }
     
     struct Round {
-        let green: Int
-        let blue: Int
-        let red: Int
+        let green: Int = 0
+        let blue: Int = 0
+        let red: Int = 0
     }
     
     let part1DummyData = """
