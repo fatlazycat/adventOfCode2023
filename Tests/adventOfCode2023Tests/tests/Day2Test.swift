@@ -6,7 +6,23 @@ import SwiftHamcrest
 class Day2Test : XCTestCase {
     
     func testDay2Part1Dummy() {
-        parseGames(lines: part1DummyData)
+        let games = parseGames(lines: part1DummyData)
+        let gamesTested = games.map{ doesRoundExceed(red: 12, green: 13, blue: 14, game: $0) ? 0 : $0.id }
+        assertThat(gamesTested.reduce(0, +) == 8)
+    }
+    
+    func testDay2Part1() {
+        let games = parseGames(lines: day2Data)
+        let gamesTested = games.map{ doesRoundExceed(red: 12, green: 13, blue: 14, game: $0) ? 0 : $0.id }
+        assertThat(gamesTested.reduce(0, +) == 2006)
+    }
+    
+    func doesRoundExceed(red: Int, green: Int, blue: Int, game: Game) -> Bool {
+        game.rounds.map{
+                $0[Colour.red] ?? 0 > red ||
+                $0[Colour.green] ?? 0 > green ||
+                $0[Colour.blue] ?? 0 > blue
+        }.contains(true)
     }
     
     func parseGames(lines: [String]) -> [Game] {
@@ -39,53 +55,24 @@ class Day2Test : XCTestCase {
             Skip{ ":" }
             roundsParser
         }
-        
-        let games = lines.map{ try! gameParser.parse($0) }.map{ Game(id: $0.0, rounds: $0.1) }
-        
-        print(games)
-        return games
-    }
 
+        return lines.map{ try! gameParser.parse($0) }.map{ Game(id: $0.0, rounds: $0.1.map{ processColours(input: $0) }) }
+    }
     
-//    let rowParser = Parse(input: Substring.self) {
-//        Game(id: $0, rounds: $1)
-//    } with: {
-//        Skip{ "Game "}
-//        Int.parser()
-//        Skip{ ":" }
-//        Many {
-//            Many {
-//                Whitespace()
-//                Int.parser()
-//                Whitespace()
-//                Prefix { $0 != "," }
-//            } separator: {
-//                ","
-//            } terminator: {
-//                "\n"
-//            }
-//        } separator: {
-//            ";"
-//        } terminator: {
-//            "\n"
-//        }
-//    }
+    func processColours(input: [(Int, Colour)]) -> [Colour : Int] {
+        let swapped = input.map { ($0.1, $0.0) }
+        return Dictionary(uniqueKeysWithValues: swapped)
+    }
     
     struct Game {
         let id: Int
-        let rounds: [[(Int, Colour)]]
+        let rounds: [[Colour : Int]]
     }
     
     enum Colour: Equatable {
         case green
         case red
         case blue
-    }
-    
-    struct Round {
-        let green: Int = 0
-        let blue: Int = 0
-        let red: Int = 0
     }
     
     let part1DummyData = """
