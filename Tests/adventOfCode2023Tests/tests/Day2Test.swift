@@ -17,6 +17,26 @@ class Day2Test : XCTestCase {
         assertThat(gamesTested.reduce(0, +) == 2006)
     }
     
+    func testDay2Part2Dummy() {
+        let games = parseGames(lines: part1DummyData)
+        let gamesTested = games.map{ minColours(game: $0) }.map{ $0.0 * $0.1 * $0.2 }
+        assertThat(gamesTested.reduce(0, +) == 2286)
+    }
+    
+    func testDay2Part2() {
+        let games = parseGames(lines: day2Data)
+        let gamesTested = games.map{ minColours(game: $0) }.map{ $0.0 * $0.1 * $0.2 }
+        assertThat(gamesTested.reduce(0, +) == 84911)
+    }
+    
+    func minColours(game: Game) -> (Int, Int, Int) {
+        let minRed = game.rounds.map{ $0[Colour.red] ?? 0 }.max()!
+        let minGreen = game.rounds.map{ $0[Colour.green] ?? 0 }.max()!
+        let minBlue = game.rounds.map{ $0[Colour.blue] ?? 0 }.max()!
+        
+        return (minRed, minGreen, minBlue)
+    }
+    
     func doesRoundExceed(red: Int, green: Int, blue: Int, game: Game) -> Bool {
         game.rounds.map{
                 $0[Colour.red] ?? 0 > red ||
