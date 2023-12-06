@@ -17,12 +17,35 @@ class Day3Test : XCTestCase {
         assertThat(result == 559667)
     }
     
-//    func testPart2Dummy() {
-//        let (numbers, symbols) = processRows(lines: day3DummyData)
-//        let gears = symbols.filter{ $0. }
-//        let result = numbers.filter{ $0.isAdjacentToAny(points: symbols) }.reduce(0, { acc, n in acc + n.toInt() })
-//        assertThat(result == 4361)
-//    }
+    func testPart2Dummy() {
+        let (numbers, symbols) = processRows(lines: day3DummyData, fn: { $0 == "*" } )
+        let result = symbols.map{ s in
+            let adjacentNumbers = Array(numbers.filter{ $0.isAdjacentTo(point: s) })
+            
+            if adjacentNumbers.count == 2 {
+                return adjacentNumbers[0].toInt() * adjacentNumbers[1].toInt()
+            } else {
+                return 0
+            }
+        }.reduce(0, { acc, n in acc + n })
+        
+        assertThat(result == 467835)
+    }
+    
+    func testPart2() {
+        let (numbers, symbols) = processRows(lines: day3Data, fn: { $0 == "*" } )
+        let result = symbols.map{ s in
+            let adjacentNumbers = Array(numbers.filter{ $0.isAdjacentTo(point: s) })
+            
+            if adjacentNumbers.count == 2 {
+                return adjacentNumbers[0].toInt() * adjacentNumbers[1].toInt()
+            } else {
+                return 0
+            }
+        }.reduce(0, { acc, n in acc + n })
+        
+        assertThat(result == 86841457)
+    }
     
     func processRows(lines: [String], fn: (Character) -> Bool) -> (Set<NumberLocation>, Set<Point>) {
         var numbers: Set<NumberLocation> = []
@@ -69,6 +92,10 @@ class NumberLocation : Equatable {
     
     func isAdjacentToAny(points: Set<Point>) -> Bool {
         !locations.intersection(points).isEmpty
+    }
+    
+    func isAdjacentToAny(points: Set<Point>) -> Set<Point> {
+        locations.intersection(points)
     }
     
     func isAdjacentTo(point: Point) -> Bool {
