@@ -6,18 +6,25 @@ import SwiftHamcrest
 class Day3Test : XCTestCase {
     
     func testPart1Dummy() {
-        let (numbers, symbols) = processRows(lines: day3DummyData)
+        let (numbers, symbols) = processRows(lines: day3DummyData, fn: { $0 != "." } )
         let result = numbers.filter{ $0.isAdjacentToAny(points: symbols) }.reduce(0, { acc, n in acc + n.toInt() })
         assertThat(result == 4361)
     }
     
     func testPart1() {
-        let (numbers, symbols) = processRows(lines: day3Data)
+        let (numbers, symbols) = processRows(lines: day3Data, fn: { $0 != "." } )
         let result = numbers.filter{ $0.isAdjacentToAny(points: symbols) }.reduce(0, { acc, n in acc + n.toInt() })
         assertThat(result == 559667)
     }
     
-    func processRows(lines: [String]) -> (Set<NumberLocation>, Set<Point>) {
+//    func testPart2Dummy() {
+//        let (numbers, symbols) = processRows(lines: day3DummyData)
+//        let gears = symbols.filter{ $0. }
+//        let result = numbers.filter{ $0.isAdjacentToAny(points: symbols) }.reduce(0, { acc, n in acc + n.toInt() })
+//        assertThat(result == 4361)
+//    }
+    
+    func processRows(lines: [String], fn: (Character) -> Bool) -> (Set<NumberLocation>, Set<Point>) {
         var numbers: Set<NumberLocation> = []
         var symbols: Set<Point> = []
         var workingNumber = NumberLocation()
