@@ -25,6 +25,16 @@ class Day6Test : XCTestCase {
         assertThat(results.reduce(1, *) == 131376)
     }
     
+    func testPart2DummyCalc() {
+        let result = calcPasses(raceTime: 71530, record: 940200)
+        assertThat(result == 71503)
+    }
+    
+    func testPart2Calc() {
+        let result = calcPasses(raceTime: 51699878, record: 377117112241505)
+        assertThat(result == 34123437)
+    }
+    
     func calcDistance(raceTime: Int, record: Int) -> Int {
         (0...raceTime).map{ $0 * (raceTime - $0) }.filter{ $0 > record }.count
     }

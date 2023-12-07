@@ -15,3 +15,6 @@ let day6Data = [
     Race(time: 98, record: 1224),
     Race(time: 78, record: 1505)
 ]
+
+//51699878
+//377117112241505
