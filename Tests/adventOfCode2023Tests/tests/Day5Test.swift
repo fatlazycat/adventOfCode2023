@@ -5,14 +5,86 @@ import SwiftHamcrest
 
 class Day5Test : XCTestCase {
     func testPart1Dummy() {
-       assertThat(process(data: day5DummyData) == 35)
+       assertThat(processPart1(data: day5DummyData) == 35)
     }
     
     func testPart1() {
-       assertThat(process(data: day5Data) == 265018614)
+       assertThat(processPart1(data: day5Data) == 265018614)
     }
     
-    func process(data: [String]) -> Int {
+    func testPart2Dummy() {
+        assertThat(processPart2(data: day5DummyData) == 46)
+    }
+    
+// Slow Running
+//    func testPart2() {
+//        assertThat(processPart2(data: day5Data) == 63179500)
+//    }
+    
+    func testPart2DummyAgain() {
+        assertThat(processPart2Again(data: day5DummyData) == 46)
+    }
+  
+// Slow Running
+//    func testPart2Again() {
+//        assertThat(processPart2Again(data: day5Data) == 63179500)
+//    }
+    
+    func processPart2(data: [String]) -> Int {
+        let mapsRaw = try! mapParser.parse(data.dropFirst(2).joined(separator: "\n"))
+        let mapsProcessed = mapsRaw.map{ ($0, $1.map{ Lookup(destination: $0.0, source: $0.1, range: $0.2) }) }
+        let maps = Dictionary(uniqueKeysWithValues: mapsProcessed)
+        let seedRanges = try! seedParser.parse(data[0]).chunked(size: 2, partialWindows: false)
+        var currentMin: Int? = nil
+        
+        seedRanges.forEach({ range in
+            let start = range[0]
+            let length = range[1]
+            
+            (start..<start + length).forEach( { seed in
+                let possibleMin = processSeed(seed: seed, maps: maps)
+                
+                if let current = currentMin {
+                    currentMin = min(current, possibleMin)
+                } else {
+                    currentMin = possibleMin
+                }
+            })
+        })
+        
+        return currentMin!
+    }
+    
+    func processPart2Again(data: [String]) -> Int {
+        let mapsRaw = try! mapParser.parse(data.dropFirst(2).joined(separator: "\n"))
+        let mapsProcessed = mapsRaw.map{ ($0, $1.map{ Lookup(destination: $0.0, source: $0.1, range: $0.2) }) }
+        let maps = Dictionary(uniqueKeysWithValues: mapsProcessed)
+        let seedRanges = try! seedParser.parse(data[0]).chunked(size: 2, partialWindows: false)
+        var location: Int = 0
+        var stop = false
+        var result: Int? = nil
+        
+        while(!stop) {
+            let seed = findSeedForLocation(location: location, maps: maps)
+            let inRange = seedRanges.filter({ range in
+                let start = range[0]
+                let length = range[1]
+                
+                return seed >= start && seed < start + length
+            })
+            
+            if !inRange.isEmpty {
+                stop = true
+                result = location
+            } else {
+                location += 1
+            }
+        }
+        
+        return result!
+    }
+    
+    func processPart1(data: [String]) -> Int {
         let seeds = try! seedParser.parse(data[0])
         let mapsRaw = try! mapParser.parse(data.dropFirst(2).joined(separator: "\n"))
         let mapsProcessed = mapsRaw.map{ ($0, $1.map{ Lookup(destination: $0.0, source: $0.1, range: $0.2) }) }
@@ -20,6 +92,29 @@ class Day5Test : XCTestCase {
         let locations = seeds.map{ processSeed(seed: $0, maps: maps) }
         
         return locations.min()!
+    }
+
+    
+    func lookupValue(valToMap: Int, data: [Lookup]) -> Int {
+        let match = data.first(where: { l in valToMap >= l.source && valToMap < l.source + l.range })
+        
+        if let foundMatch = match {
+            let offset = valToMap - foundMatch.source
+            return foundMatch.destination + offset
+        } else {
+            return valToMap
+        }
+    }
+    
+    func lookupValueReverse(valToMap: Int, data: [Lookup]) -> Int {
+        let match = data.first(where: { l in valToMap >= l.destination && valToMap < l.destination + l.range })
+        
+        if let foundMatch = match {
+            let offset = valToMap - foundMatch.destination
+            return foundMatch.source + offset
+        } else {
+            return valToMap
+        }
     }
     
     func processSeed(seed: Int, maps: [Substring : [Day5Test.Lookup]]) -> Int {
@@ -33,16 +128,17 @@ class Day5Test : XCTestCase {
         
         return location
     }
-    
-    func lookupValue(valToMap: Int, data: [Lookup]) -> Int {
-        let match = data.first(where: { l in valToMap >= l.source && valToMap < l.source + l.range })
+
+    func findSeedForLocation(location: Int, maps: [Substring : [Day5Test.Lookup]]) -> Int {
+        let humidity = lookupValueReverse(valToMap: location, data: maps["humidity-to-location"]!)
+        let temp = lookupValueReverse(valToMap: humidity, data: maps["temperature-to-humidity"]!)
+        let light = lookupValueReverse(valToMap: temp, data: maps["light-to-temperature"]!)
+        let water = lookupValueReverse(valToMap: light, data: maps["water-to-light"]!)
+        let fertilizer = lookupValueReverse(valToMap: water, data: maps["fertilizer-to-water"]!)
+        let soil = lookupValueReverse(valToMap: fertilizer, data: maps["soil-to-fertilizer"]!)
+        let seed = lookupValueReverse(valToMap: soil, data: maps["seed-to-soil"]!)
         
-        if let foundMatch = match {
-            let offset = valToMap - foundMatch.source
-            return foundMatch.destination + offset
-        } else {
-            return valToMap
-        }
+        return seed
     }
         
     let seedParser = Parse(input: Substring.self) {
