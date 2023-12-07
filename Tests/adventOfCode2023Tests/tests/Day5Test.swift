@@ -4,6 +4,7 @@ import Foundation
 import SwiftHamcrest
 
 class Day5Test : XCTestCase {
+    
     func testPart1Dummy() {
        assertThat(processPart1(data: day5DummyData) == 35)
     }
