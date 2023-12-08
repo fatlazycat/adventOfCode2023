@@ -15,7 +15,7 @@ class Day7Test : XCTestCase {
     
     func calcPart1(s: String) -> Int {
         let data = try! parser.parse(s)
-        let hands = data.map{ Hand(cards: $0.0, bet: $0.1) }
+        let hands = data.map{ Hand(cards: $0.0, originalCards: $0.0, bet: $0.1, rank: cardRank) }
         let orderedHands = hands.sorted()
         let prize = orderedHands.enumerated().map{ (i, h) in h.bet * (i+1) }
         return prize.reduce(0, +)
@@ -37,13 +37,17 @@ class Day7Test : XCTestCase {
         }
         
         let cards: Substring
+        let originalCards: Substring
         let bet: Int
         let hand: Int
+        let rank: [String : Int]
         
-        init(cards: Substring, bet: Int) {
+        init(cards: Substring, originalCards: Substring, bet: Int, rank: [String : Int]) {
             self.cards = cards
+            self.originalCards = originalCards
             self.bet = bet
             self.hand = Day7Test.Hand.calcHand(cards)
+            self.rank = rank
         }
         
         private static func calcHand(_ s: Substring) -> Int {
@@ -67,7 +71,6 @@ class Day7Test : XCTestCase {
                 return CardHand.onePair.rawValue
             }
             
-//            return s.toCharArray().map{ cardRank[String($0)]! }.max()!
             return CardHand.high.rawValue
         }
         
@@ -80,10 +83,10 @@ class Day7Test : XCTestCase {
                 return lhsHand > rhsHand
             } else {
                 // compare cards
-                let zipped = zip2(self.cards.toCharArray(), rhs.cards.toCharArray())
+                let zipped = zip2(self.originalCards.toCharArray(), rhs.originalCards.toCharArray())
                 let firstMismatch = zipped.first(where: { $0.0 != $0.1 })
                 
-                return cardRank[String(firstMismatch!.0)]! > cardRank[String(firstMismatch!.1)]!
+                return rank[String(firstMismatch!.0)]! > rank[String(firstMismatch!.1)]!
             }
             
         }
