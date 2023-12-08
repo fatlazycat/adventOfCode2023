@@ -13,9 +13,25 @@ class Day7Test : XCTestCase {
         assertThat(calcPart1(s: day7Data) == 248217452)
     }
     
+    func testPart2Dummy() {
+        assertThat(calcPart2(s: day7DummyData) == 5905)
+    }
+    
+    func testPart2() {
+        assertThat(calcPart2(s: day7Data) == 245576185)
+    }
+    
     func calcPart1(s: String) -> Int {
         let data = try! parser.parse(s)
         let hands = data.map{ Hand(cards: $0.0, originalCards: $0.0, bet: $0.1, rank: cardRank) }
+        let orderedHands = hands.sorted()
+        let prize = orderedHands.enumerated().map{ (i, h) in h.bet * (i+1) }
+        return prize.reduce(0, +)
+    }
+    
+    func calcPart2(s: String) -> Int {
+        let data = try! parser.parse(s)
+        let hands = data.map{ Hand(cards: Substring(processJoker(hand: String($0.0))), originalCards: $0.0, bet: $0.1, rank: cardRankJoker) }
         let orderedHands = hands.sorted()
         let prize = orderedHands.enumerated().map{ (i, h) in h.bet * (i+1) }
         return prize.reduce(0, +)
@@ -30,6 +46,23 @@ class Day7Test : XCTestCase {
             Whitespace(1, .vertical)
         }
     }
+    
+    func processJoker(hand: String) -> String {
+        var seqs = hand.histogram()
+        
+        if let joker = seqs["J"] {
+            if joker <= 4 {
+                seqs.removeValue(forKey: "J")
+                let sortedItem = seqs.sorted{ $0.value < $1.value }.reversed().first!
+                return hand.replacingOccurrences(of: "J", with: String(sortedItem.key))
+            } else {
+                return hand
+            }
+        } else {
+            return hand
+        }
+    }
+    
     
     struct Hand : Comparable {
         static func < (lhs: Day7Test.Hand, rhs: Day7Test.Hand) -> Bool {
@@ -108,6 +141,22 @@ let cardRank = [
     "K" : 13,
     "Q" : 12,
     "J" : 11,
+    "T" : 10,
+    "9" : 9,
+    "8" : 8,
+    "7" : 7,
+    "6" : 6,
+    "5" : 5,
+    "4" : 4,
+    "3" : 3,
+    "2" : 2,
+]
+
+let cardRankJoker = [
+    "A" : 14,
+    "K" : 13,
+    "Q" : 12,
+    "J" : 1,
     "T" : 10,
     "9" : 9,
     "8" : 8,
