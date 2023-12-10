@@ -7,7 +7,7 @@ let day10DummyData = """
 SJ.L7
 |F--J
 LJ...
-"""
+""".lines
 
 let day10Data = """
 F-F7----F7-7-J--J--7FFL7F-7FFF77JFL|7|-L7--F77FF-FF7..-J7.F---FF7-|-JF7-J-F|-7FF|-FLL--7F-F--.--|77F|F---7-F--F7.L7F77|F----FF-F7FF.F-.L.L.J
@@ -150,4 +150,4 @@ J.L|-|F|LL||JL|J.LJ-L7.FJ-|7|L-.|F7..--F7-FL.LJ7L.J|F7FLFJ7..J.|7JL7||LJJ--F---L
 FJ7.L-|J7-LL7.7.F|7.L|7L-|FF|.JF-JL77.JLF--F-..7.-L7LJJ|J7F-J|FL-7-|L-JL|.LF.|-J7L---F.LF--J7J||F-L-77LJJL7--7-.7||J.F7J.-7LL-|.LFJ.L|-FJ-JJ
 LJ-LF-|L7-L|.FLFF-.|FLFJ.|-J|L.L|7..7F|FL7.L7FF7--F.LFFJ7F|J.L--LJ7F-J7.J7.JFLJ|F7.FL|-L|.LFJ.|F77L-7FLJFJ....L--7-7-F-F|LJL|.-F-JL7|LFJ|.|J
 J7LL.FJLJ--J-7-|--F-J-JJ-7.LLJF--7.----|L7-J|L|.L-7.--JL-F-F|J.L|-JJJ.-|LJ-LLJ-JJLJ7----|-LL--F7L--.J-J-LJ-LJ.-JF.L|.LJLF7J.|7.JJ7JJL-|-F-LJ
-"""
+""".lines
