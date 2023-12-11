@@ -21,50 +21,103 @@ class Day10Test : XCTestCase {
         assertThat(steps.count/2 == 6690)
     }
     
-//    func testPart2Dummy() {
-//        let lines = day10Ex1
-//        let data = parser(lines: lines)
-//        let possibleMatches = data.filter{ $0.value == "." }
-//        let countsForPoint = possibleMatches.map{ getWallsToEdges(p: $0.key, data: data, size: lines.count) }
-//        let inside = countsForPoint.filter{ points in points.filter{$0.isOdd()}.count == 4 }
-//        
-//        assertThat(inside.count == 4)
-//    }
-//    
-//    func testPart2DummyAgain() {
-//        let lines = day10Ex2
-//        let data = parser(lines: lines)
-//        let possibleMatches = data.filter{ $0.value == "." }
-//        let countsForPoint = possibleMatches.map{ getWallsToEdges(p: $0.key, data: data, size: lines.count) }
-//        let inside = countsForPoint.filter{ points in points.filter{$0.isOdd()}.count == 4 }
-//        
-//        assertThat(inside.count == 10)
-//    }
-//    
-//    func testGetWallsToEdges() {
-//        let data = parser(lines: day10Ex1)
-//        assertThat(getWallsToEdges(p: Point(0,4), data: data, size: day10Ex1.count) == [0, 0, 0, 4])
-//        assertThat(getWallsToEdges(p: Point(2,6), data: data, size: day10Ex1.count) == [5, 1, 1, 3])
-//        assertThat(getWallsToEdges(p: Point(3,3), data: data, size: day10Ex1.count) == [2, 2, 2, 2])
-//        let data2 = day10Ex2
-//        assertThat(getWallsToEdges(p: Point(13,3), data: data2, size: day10Ex1.count) == [2, 2, 2, 2])
-//    }
-//    
-//    func getWallsToEdges(p: Point, data: [Point : Character], size: Int) -> [Int] {
-//        
-//        let north = stride(from: p.y-1, to: 0, by: -1).map{ data[Point(p.x, $0)] }.filter{ $0 != "."}.count
-//        let south = stride(from: size-1, to: p.y, by: -1).map{ data[Point(p.x, $0)] }.filter{ $0 != "."}.count
-//        let west = stride(from: p.x-1, to: 0, by: -1).map{ data[Point($0, p.y)] }.filter{ $0 != "."}.count
-//        let east = stride(from: size-1, to: p.x, by: -1).map{ data[Point($0, p.y)] }.filter{ $0 != "."}.count
-//
-//        return [north, south, west, east]
-//    }
+    func testPart2Dummy() {
+        let lines = day10Ex1
+        let data = parser(lines: lines)
+        let start = data.filter{ $0.value == "S" }.first!.key
+        let steps = traverse(start: start, data: data)
+        let possibleMatches = data.filter{ !steps.contains($0.key) }
+        let contained = possibleMatches.filter{ wallCounts(p: $0.key, data: data, loop: Set(steps), start: start).isOdd() }
+        
+        assertThat(contained.count == 4)
+    }
     
-    func traverse(start: Point, data: [Point : Character]) -> [Point] {
+    func testPart2DummyAgain() {
+        let lines = day10Ex2
+        let data = parser(lines: lines)
+        let start = data.filter{ $0.value == "S" }.first!.key
+        let steps = traverse(start: start, data: data)
+        let possibleMatches = data.filter{ !steps.contains($0.key) }
+        let contained = possibleMatches.filter{ wallCounts(p: $0.key, data: data, loop: Set(steps), start: start).isOdd() }
+        
+        assertThat(contained.count == 10)
+    }
+    
+    func testPart2() {
+        let lines = day10Data
+        let data = parser(lines: lines)
+        let start = data.filter{ $0.value == "S" }.first!.key
+        let steps = traverse(start: start, data: data)
+        let possibleMatches = data.filter{ !steps.contains($0.key) }
+        let contained = possibleMatches.filter{ wallCounts(p: $0.key, data: data, loop: Set(steps), start: start).isOdd() }
+        
+        assertThat(contained.count == 525)
+    }
+    
+    func testWallCounts() {
+        let lines = day10Ex1
+        let data = parser(lines: lines)
+        let start = data.filter{ $0.value == "S" }.first!.key
+        let steps = traverse(start: start, data: data)
+        let result = wallCounts(p: Point(9, 2), data: data, loop: Set(steps), start: start)
+        assertThat(result == 2)
+    }
+    
+    func wallCounts(p: Point, data: [Point : Character], loop: Set<Point>, start: Point) -> Int {
+        let crossings: Set<Character> = ["|", "J", "L"]
+        let pipeAtStart = pipeAtStart(p: start, data: data)
+        var focus = Point(p.x-1, p.y)
+        var intersections = 0
+        
+        while focus.x >= 0 {
+            let raw = data[focus]
+            let val = raw == "S" ? pipeAtStart : raw!
+            
+            if loop.contains(focus) && crossings.contains(val) {
+                intersections += 1
+            }
+            
+            focus = Point(focus.x-1, focus.y)
+        }
+        
+        return intersections
+    }
+    
+    func testStartPipe() {
+        let lines = day10Ex2
+        let data = parser(lines: lines)
+        
+        assertThat(pipeAtStart(p: Point(4,0), data: data) == "7")
+    }
+    
+    func pipeAtStart(p: Point, data: [Point : Character]) -> Character {
+        let directions = findPipeAtPoint(start: p, data: data)
+        let firstDirection = directions[0]
+        let secondDirection = directions[1]
+        
+        switch(firstDirection, secondDirection) {
+            // | is a vertical pipe connecting north and south.
+            case (Direction.North, Direction.South): return "|"
+            // - is a horizontal pipe connecting east and west.
+            case (Direction.West, Direction.East): return "-"
+            // L is a 90-degree bend connecting north and east.
+            case (Direction.North, Direction.East): return "L"
+            // J is a 90-degree bend connecting north and west.
+            case (Direction.North, Direction.West): return "J"
+            // 7 is a 90-degree bend connecting south and west.
+            case (Direction.South, Direction.West): return "7"
+            // F is a 90-degree bend connecting south and east.
+            case (Direction.South, Direction.East): return "F"
+            default: assert(false)
+        }
+    }
+    
+    func traverse(start: Point, data: [Point : Character]) -> Set<Point> {
         
         var steps: [Point] = []
         var location = start
-        let firstMove = findFirstMove(start: start, data: data)
+        let firstMove = findFirstMoves(start: start, data: data).first!
+        steps.append(Point(firstMove.0.x, firstMove.0.y))
         
         location = Point(firstMove.0.x + firstMove.1.0, firstMove.0.y + firstMove.1.1)
         steps.append(location)
@@ -78,20 +131,51 @@ class Day10Test : XCTestCase {
             
         } while nextMove.2 != Direction.Finished
         
-        return steps
+        return Set(steps)
     }
     
-    func findFirstMove(start: Point, data: [Point : Character]) -> (Point, (Int, Int, Direction)) {
+    func findFirstMoves(start: Point, data: [Point : Character]) -> [(Point, (Int, Int, Direction))] {
+        var result : [(Point, (Int, Int, Direction))] = []
+        
         if let moveNorth = move(newPoint: Point(start.x, start.y-1), data: data, direction: Direction.North) {
-            return (Point(start.x, start.y-1), moveNorth)
-        } else if let moveSouth = move(newPoint: Point(start.x, start.y+1), data: data, direction: Direction.South) {
-            return (Point(start.x, start.y+1), moveSouth)
-        } else if let moveWest = move(newPoint: Point(start.x-1, start.y), data: data, direction: Direction.West) {
-            return (Point(start.x-1, start.y), moveWest)
-        } else {
-            let moveEast = move(newPoint: Point(start.x-1, start.y), data: data, direction: Direction.East)!
-            return (Point(start.x+1, start.y), moveEast)
+            result.append((Point(start.x, start.y-1), moveNorth))
         }
+        
+        if let moveSouth = move(newPoint: Point(start.x, start.y+1), data: data, direction: Direction.South) {
+            result.append((Point(start.x, start.y+1), moveSouth))
+        }
+        
+        if let moveWest = move(newPoint: Point(start.x-1, start.y), data: data, direction: Direction.West) {
+            result.append((Point(start.x-1, start.y), moveWest))
+        }
+        
+        if let moveEast = move(newPoint: Point(start.x+1, start.y), data: data, direction: Direction.East) {
+            result.append((Point(start.x+1, start.y), moveEast))
+        }
+        
+        return result
+    }
+    
+    func findPipeAtPoint(start: Point, data: [Point : Character]) -> [Direction] {
+        var result : [Direction] = []
+        
+        if move(newPoint: Point(start.x, start.y-1), data: data, direction: Direction.North) != nil {
+            result.append(Direction.North)
+        }
+        
+        if move(newPoint: Point(start.x, start.y+1), data: data, direction: Direction.South) != nil {
+            result.append(Direction.South)
+        }
+        
+        if move(newPoint: Point(start.x-1, start.y), data: data, direction: Direction.West) != nil {
+            result.append(Direction.West)
+        }
+        
+        if move(newPoint: Point(start.x+1, start.y), data: data, direction: Direction.East) != nil {
+            result.append(Direction.East)
+        }
+        
+        return result
     }
     
     func move(newPoint: Point, data: [Point : Character], direction: Direction) -> (Int, Int, Direction)? {
