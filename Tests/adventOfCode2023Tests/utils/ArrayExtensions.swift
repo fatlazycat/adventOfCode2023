@@ -37,6 +37,10 @@ extension Array where Element: Equatable & Hashable {
         return Array(self[bounds])
     }
     
+    func appendOptionalAndCompact(_ item: Element?) -> Array<Element> {
+        return (self + [item]).compactMap{ $0 }
+    }
+    
     
     func histogram() -> [Element: Int] {
         return self.reduce(into: [:]) { counts, elem in counts[elem, default: 0] += 1 }
