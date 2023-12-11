@@ -18,14 +18,53 @@ class Day10Test : XCTestCase {
         let start = data.filter{ $0.value == "S" }.first!.key
         let steps = traverse(start: start, data: data)
         
-        assertThat(steps/2 == 8) // 6690
+        assertThat(steps/2 == 6690)
+    }
+    
+    func testPart2Dummy() {
+        let lines = day10Ex1
+        let data = parser(lines: lines)
+        let possibleMatches = data.filter{ $0.value == "." }
+        let countsForPoint = possibleMatches.map{ getWallsToEdges(p: $0.key, data: data, size: lines.count) }
+        let inside = countsForPoint.filter{ points in points.filter{$0.isOdd()}.count == 4 }
+        
+        assertThat(inside.count == 4)
+    }
+    
+    func testPart2DummyAgain() {
+        let lines = day10Ex2
+        let data = parser(lines: lines)
+        let possibleMatches = data.filter{ $0.value == "." }
+        let countsForPoint = possibleMatches.map{ getWallsToEdges(p: $0.key, data: data, size: lines.count) }
+        let inside = countsForPoint.filter{ points in points.filter{$0.isOdd()}.count == 4 }
+        
+        assertThat(inside.count == 10)
+    }
+    
+    func testGetWallsToEdges() {
+        let data = parser(lines: day10Ex1)
+        assertThat(getWallsToEdges(p: Point(0,4), data: data, size: day10Ex1.count) == [0, 0, 0, 4])
+        assertThat(getWallsToEdges(p: Point(2,6), data: data, size: day10Ex1.count) == [5, 1, 1, 3])
+        assertThat(getWallsToEdges(p: Point(3,3), data: data, size: day10Ex1.count) == [2, 2, 2, 2])
+        let data2 = day10Ex2
+        assertThat(getWallsToEdges(p: Point(13,3), data: data2, size: day10Ex1.count) == [2, 2, 2, 2])
+    }
+    
+    func getWallsToEdges(p: Point, data: [Point : Character], size: Int) -> [Int] {
+        
+        let north = stride(from: p.y-1, to: 0, by: -1).map{ data[Point(p.x, $0)] }.filter{ $0 != "."}.count
+        let south = stride(from: size-1, to: p.y, by: -1).map{ data[Point(p.x, $0)] }.filter{ $0 != "."}.count
+        let west = stride(from: p.x-1, to: 0, by: -1).map{ data[Point($0, p.y)] }.filter{ $0 != "."}.count
+        let east = stride(from: size-1, to: p.x, by: -1).map{ data[Point($0, p.y)] }.filter{ $0 != "."}.count
+
+        return [north, south, west, east]
     }
     
     func traverse(start: Point, data: [Point : Character]) -> Int {
         
         var steps = 1
         var location = start
-        var firstMove = findFirstMove(start: start, data: data)
+        let firstMove = findFirstMove(start: start, data: data)
         
         location = Point(firstMove.0.x + firstMove.1.0, firstMove.0.y + firstMove.1.1)
         var nextMove = firstMove.1
