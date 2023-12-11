@@ -8,7 +8,7 @@ class Day10Test : XCTestCase {
     func testPart1Dummy(){
         let data = parser(lines: day10DummyData)
         let start = data.filter{ $0.value == "S" }.first!.key
-        let steps = traverse(p: start, data: data, visited: [start]).max()!
+        let steps = traverse(start: start, data: data)
         
         assertThat(steps/2 == 8)
     }
@@ -16,51 +16,47 @@ class Day10Test : XCTestCase {
     func testPart1(){
         let data = parser(lines: day10Data)
         let start = data.filter{ $0.value == "S" }.first!.key
-        let steps = traverse(p: start, data: data, visited: [start]).max()!
+        let steps = traverse(start: start, data: data)
         
-        assertThat(steps/2 == 8)
+        assertThat(steps/2 == 8) // 6690
     }
     
-    func traverse(p: Point?, data: [Point : Character], visited: [Point]) -> [Int] {
+    func traverse(start: Point, data: [Point : Character]) -> Int {
         
-        if let p = p {
-            if visited.count > 2 && p == visited.first {
-                // we are back at the start
-                return [visited.count-1]
-            }
+        var steps = 1
+        var location = start
+        var firstMove = findFirstMove(start: start, data: data)
+        
+        location = Point(firstMove.0.x + firstMove.1.0, firstMove.0.y + firstMove.1.1)
+        var nextMove = firstMove.1
+        
+        repeat {
+            nextMove = move(newPoint: location, data: data, direction: nextMove.2)!
+            location = Point(location.x + nextMove.0, location.y + nextMove.1)
+            steps += 1
             
-            let north = move(newPoint: Point(p.x, p.y-1), data: data, visited: visited, validOptions: "7|F")
-            let south = move(newPoint: Point(p.x, p.y+1), data: data, visited: visited, validOptions: "L|J")
-            let west = move(newPoint: Point(p.x-1, p.y), data: data, visited: visited, validOptions: "L-F")
-            let east = move(newPoint: Point(p.x+1, p.y), data: data, visited: visited, validOptions: "7-J")
-            
-            // Attempt to traverse the map
-            return (
-                traverse(p: north,
-                         data: data,
-                         visited: visited.appendOptionalAndCompact(north)) +
-                traverse(p: south,
-                         data: data,
-                         visited: visited.appendOptionalAndCompact(south)) +
-                traverse(p: west,
-                         data: data,
-                         visited: visited.appendOptionalAndCompact(west)) +
-                traverse(p: east,
-                         data: data,
-                         visited: visited.appendOptionalAndCompact(east))
-            ).compactMap{ $0 }
+        } while nextMove.2 != Direction.Finished
+        
+        return steps
+    }
+    
+    func findFirstMove(start: Point, data: [Point : Character]) -> (Point, (Int, Int, Direction)) {
+        if let moveNorth = move(newPoint: Point(start.x, start.y-1), data: data, direction: Direction.North) {
+            return (Point(start.x, start.y-1), moveNorth)
+        } else if let moveSouth = move(newPoint: Point(start.x, start.y+1), data: data, direction: Direction.South) {
+            return (Point(start.x, start.y+1), moveSouth)
+        } else if let moveWest = move(newPoint: Point(start.x-1, start.y), data: data, direction: Direction.West) {
+            return (Point(start.x-1, start.y), moveWest)
+        } else {
+            let moveEast = move(newPoint: Point(start.x-1, start.y), data: data, direction: Direction.East)!
+            return (Point(start.x+1, start.y), moveEast)
         }
-        
-        return []
     }
     
-    func move(newPoint: Point, data: [Point : Character], visited: [Point], validOptions: String) -> Point? {
-        if let potentialNewPoint = data[newPoint] {
-            if "S".contains(potentialNewPoint) && visited.count > 2 {
-                return newPoint
-            }
-            else if validOptions.contains(potentialNewPoint) && !visited.contains(newPoint) {
-                return newPoint
+    func move(newPoint: Point, data: [Point : Character], direction: Direction) -> (Int, Int, Direction)? {
+        if let route = data[newPoint] {
+            if let nextMove = moves[NextLocation(d: direction, s: route)] {
+                return nextMove
             }
         }
         
@@ -75,6 +71,38 @@ class Day10Test : XCTestCase {
         }
         
         return Dictionary(uniqueKeysWithValues: data)
+    }
+    
+    let moves = [
+        NextLocation(d: Direction.North, s: "|") : (0, -1, Direction.North),
+        NextLocation(d: Direction.North, s: "7") : (-1, 0, Direction.West),
+        NextLocation(d: Direction.North, s: "F") : (1, 0, Direction.East),
+        NextLocation(d: Direction.North, s: "S") : (0, 0, Direction.Finished),
+        NextLocation(d: Direction.South, s: "|") : (0, 1, Direction.South),
+        NextLocation(d: Direction.South, s: "L") : (1, 0, Direction.East),
+        NextLocation(d: Direction.South, s: "J") : (-1, 0, Direction.West),
+        NextLocation(d: Direction.South, s: "S") : (0, 0, Direction.Finished),
+        NextLocation(d: Direction.West, s: "-") : (-1, 0, Direction.West),
+        NextLocation(d: Direction.West, s: "L") : (0, -1, Direction.North),
+        NextLocation(d: Direction.West, s: "F") : (0, 1, Direction.South),
+        NextLocation(d: Direction.West, s: "S") : (0, 0, Direction.Finished),
+        NextLocation(d: Direction.East, s: "-") : (1, 0, Direction.East),
+        NextLocation(d: Direction.East, s: "7") : (0, 1, Direction.South),
+        NextLocation(d: Direction.East, s: "J") : (0, -1, Direction.North),
+        NextLocation(d: Direction.East, s: "S") : (0, 0, Direction.Finished),
+    ]
+    
+    struct NextLocation : Equatable, Hashable {
+        let d: Direction
+        let s: Character
+    }
+    
+    enum Direction {
+        case North
+        case South
+        case West
+        case East
+        case Finished
     }
 }
 
