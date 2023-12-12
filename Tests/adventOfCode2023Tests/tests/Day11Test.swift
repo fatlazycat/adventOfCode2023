@@ -15,6 +15,13 @@ class Day11Test : XCTestCase {
         XCTAssertEqual(getSumOfShortestPaths(data), 9974721)
     }
     
+    func testExpandedUniverse() {
+        let data = day11DummyData.lines
+        let grid = createGrid(from: data)
+        XCTAssertEqual(getExpandedUniverseRows(grid), [3, 7])
+        XCTAssertEqual(getExpandedUniverseCols(grid), [2, 5, 8])
+    }
+    
     func getSumOfShortestPaths(_ data: [String]) -> Int {
         let grid = createGrid(from: data)
         let expandedUniverse = expandUniverse(grid)
@@ -60,6 +67,20 @@ class Day11Test : XCTestCase {
         return result
     }
     
+    func getExpandedUniverseRows(_ data: [[Character]]) -> [Int] {
+        (0..<data.count).map{ row in
+            data[row].filter({ $0 == "#" }).count == 0 ? row : nil
+        }.compactMap{ $0 }
+    }
+    
+    func getExpandedUniverseCols(_ data: [[Character]]) -> [Int] {
+        let width = data[0].count
+        let height = data.count
+        
+        return (0..<width).compactMap { col in
+            (0..<height).filter({ row in data[row][col] == "#" }).count == 0 ? col : nil
+        }
+    }
     
     func expandUniverse(_ data: [[Character]]) -> [[Character]] {
         var expandedUniverse = [[Character]]()
