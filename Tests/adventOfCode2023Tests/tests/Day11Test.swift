@@ -12,7 +12,7 @@ class Day11Test : XCTestCase {
     
     func testPart1(){
         let data = day11Data.lines
-        XCTAssertEqual(getSumOfShortestPaths(data), 9974721) // 9974721
+        XCTAssertEqual(getSumOfShortestPaths(data), 9974721)
     }
     
     func getSumOfShortestPaths(_ data: [String]) -> Int {
