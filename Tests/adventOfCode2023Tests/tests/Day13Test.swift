@@ -18,45 +18,88 @@ class Day13Test : XCTestCase {
         XCTAssertEqual(results.reduce(0, +), 27505)
     }
     
-    func testWindow() {
+    func testPart2Dummy(){
         let data = parseData(lines: day13DummyData)
+        let result = data.map{ correctSmudge(data: $0) }
         
-        let vertical1 = reduceFromTop(rotateArray90Degrees(data[1]))
-        let vertical2 = reduceFromBottom(rotateArray90Degrees(data[1]))
-        let horizontal1 = reduceFromTop(data[1])
-        let horizontal2 = reduceFromBottom(data[1])
-        print(vertical1)
-        print("---")
-        print(vertical2)
-        print("---")
-        print(horizontal1)
-        print("---")
-        print(horizontal2)
+        XCTAssertEqual(result.reduce(0, +), 400)
     }
     
-    func testWindow2() {
-        let data = parseData(lines: day13DummyData)
+    func testPart2(){
+        let data = parseData(lines: day13Data)
+        let result = data.map{ correctSmudge(data: $0) }
         
-        let vertical1 = reduceFromTop(rotateArray90Degrees(data[0]))
-        let vertical2 = reduceFromBottom(rotateArray90Degrees(data[0]))
-        let horizontal1 = reduceFromTop(data[0])
-        let horizontal2 = reduceFromBottom(data[0])
-        print(vertical1)
-        print("---")
-        print(vertical2)
-        print("---")
-        print(horizontal1)
-        print("---")
-        print(horizontal2)
+        XCTAssertEqual(result.reduce(0, +), 22906)
+    }
+    
+    func correctSmudge(data: [[Character]]) -> Int {
+        let points = (0..<data.count).flatMap{ row in (0..<data[row].count).map{ col in Point(col, row) } }
+        let original = getMirrorLineCalcWithData(data: data)
+        
+        let result = points.map{ p in
+            let updatedGrid = swapPoint(p: p, data: data)
+            return getMirrorLineCalcWithIgnore(data: updatedGrid, ignore: original)
+        }.filter({ $0 != 0 })
+        
+        return result.first!
+    }
+    
+    func swapPoint(p: Point, data: [[Character]]) -> [[Character]] {
+        var copy = data
+        
+        if data[p.y][p.x] == "#" {
+            copy[p.y][p.x] = "."
+        } else {
+            copy[p.y][p.x] = "#"
+        }
+        
+        return copy
     }
     
     func getMirrorLineCalc(data: [[Character]]) -> Int {
-        let vertical = [reduceFromTop(rotateArray90Degrees(data)) + reduceFromBottom(rotateArray90Degrees(data))].flatMap{ $0 }.map{ $0.first }
-        let horizontal = [reduceFromTop(data) + reduceFromBottom(data)].flatMap{ $0 }.map{ $0.first * 100 }
+        let vertical = [reduceFromTop(rotateArray90Degrees(data)), reduceFromBottom(rotateArray90Degrees(data))].flatMap{ $0 }.map{ $0.first }
+        let horizontal = [reduceFromTop(data), reduceFromBottom(data)].flatMap{ $0 }.map{ $0.first * 100 }
         
         return (vertical + horizontal).reduce(0, +)
     }
+    
+    func getMirrorLineCalcWithIgnore(data: [[Character]], ignore: (Orientation, Int)) -> Int {
+        
+        var vertical = [reduceFromTop(rotateArray90Degrees(data)), reduceFromBottom(rotateArray90Degrees(data))].flatMap{ $0 }
+        var horizontal = [reduceFromTop(data), reduceFromBottom(data)].flatMap{ $0 }
+        
+        if ignore.0 == Orientation.Horiztonal {
+            horizontal.removeAll(where: { $0.first == ignore.1 })
+        } else {
+            vertical.removeAll(where: { $0.first == ignore.1 })
+        }
+        
+        return (vertical.map{ $0.first } + horizontal.map{ $0.first * 100 }).reduce(0, +)
+    }
+    
+    
+    func getMirrorLineCalcWithData(data: [[Character]]) -> (Orientation, Int) {
+        let vert1 = reduceFromTop(rotateArray90Degrees(data))
+        let vert2 = reduceFromBottom(rotateArray90Degrees(data))
+        let horz1 = reduceFromTop(data)
+        let horz2 = reduceFromBottom(data)
+        
+        if !vert1.isEmpty {
+            return (Orientation.Vertical, vert1.first!.first)
+        } else if !vert2.isEmpty {
+            return (Orientation.Vertical, vert2.first!.first)
+        } else if !horz1.isEmpty {
+            return (Orientation.Horiztonal, horz1.first!.first)
+        } else {
+            return (Orientation.Horiztonal, horz2.first!.first)
+        }
+    }
 
+    enum Orientation {
+        case Vertical
+        case Horiztonal
+    }
+    
     func reduceFromBottom(_ inputLines: [[Character]], index: Int = 1) -> [Match] {
         let height = inputLines.count
 
