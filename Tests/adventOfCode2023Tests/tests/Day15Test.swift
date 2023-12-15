@@ -59,35 +59,35 @@ class Day15Test : XCTestCase {
     }
         
     func processInstructions(data: [Step]) -> [Int : [Lens]] {
-        var boxes = [Int : [Lens]]()
-        
-        data.forEach({ step in
+        let finalBoxes = foldl(sequence: data, base: [Int : [Lens]]()) {(acc, step) in
             let boxNumber = getHashOfStep(s: step)
-            var box: [Lens] = boxes[boxNumber, default: []]
+            let box: [Lens] = acc[boxNumber, default: []]
             
             switch step {
             case .equals(let s, let n):
                 if let existingLensIndex = box.firstIndex(where: { $0.name == s }) {
-                    box[existingLensIndex] = Lens(name: s, strength: n)
-                    boxes[boxNumber] = box
+                    let updatedBox = box.replaceAtIndex(existingLensIndex, Lens(name: s, strength: n))
+                    return acc.merging([boxNumber : updatedBox], uniquingKeysWith: { (_, new) in new })
                 } else {
-                    box.append(Lens(name: s, strength: n))
-                    boxes[boxNumber] = box
+                    return acc.merging([boxNumber : box.appendElement(Lens(name: s, strength: n))], uniquingKeysWith: { (_, new) in new })
                 }
             case .minus(let s):
                 if let existingLensIndex = box.firstIndex(where: { $0.name == s }) {
-                    box.remove(at: existingLensIndex)
+                    let updatedBox = box.removeElement(at: existingLensIndex)
                     
-                    if box.isEmpty {
-                        boxes[boxNumber] = nil
+                    if updatedBox.isEmpty {
+                        return acc.removeValueFor(forKey: boxNumber)
                     } else {
-                        boxes[boxNumber] = box
+                        let updatedBox = box.removeElement(at: existingLensIndex)
+                        return acc.merging([boxNumber : updatedBox], uniquingKeysWith: { (_, new) in new })
                     }
                 }
             }
-        })
+            
+            return acc
+        }
         
-        return boxes
+        return finalBoxes
     }
     
     func getHashOfStep(s: Step) -> Int {
@@ -135,12 +135,12 @@ class Day15Test : XCTestCase {
         }
     }
     
-    enum Step : Equatable {
+    enum Step : Equatable, Hashable {
         case equals(s: Substring, n: Int)
         case minus(s: Substring)
     }
     
-    struct Lens : Equatable {
+    struct Lens : Equatable, Hashable {
         let name: Substring
         let strength: Int
     }

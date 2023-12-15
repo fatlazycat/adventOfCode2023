@@ -16,7 +16,25 @@ import Foundation
 import CloudKit
 
 extension Array where Element: Equatable & Hashable {
+    
+    public func removeElement(at index: Int) -> Array {
+        var arrayCopy = self
+        arrayCopy.remove(at: index)
+        return arrayCopy
+    }
 
+    func appendElement(_ element: Element) -> Array {
+        var arrayCopy = self
+        arrayCopy.append(element)
+        return arrayCopy
+    }
+    
+    func replaceAtIndex(_ index: Int, _ element: Element) -> Array {
+        var arrayCopy = self
+        arrayCopy[index] = element
+        return arrayCopy
+    }
+    
     func dropFirstArray() -> Array {
         Array(self.dropFirst())
     }
