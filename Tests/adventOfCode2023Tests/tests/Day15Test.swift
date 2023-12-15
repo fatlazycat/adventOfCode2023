@@ -5,11 +5,32 @@ import Foundation
 class Day15Test : XCTestCase {
     
     func testPart1Dummy(){
-        let data = try! Day15Test.parser.parse(day15DummyData)
-        print(data)
-//        let titltedGrid = tiltNorth(data: data)
-//        
-//        XCTAssertEqual(136, sumLoad(grid: titltedGrid))
+        let rawData = try! Day15Test.parser.parse(day15DummyData)
+//        let data = rawData.map{ try! Day15Test.stepParser.parse($0)}
+        
+        XCTAssertEqual(1320, rawData.map{ getNumber($0) }.reduce(0, +))
+    }
+    
+    func testPart1(){
+        let rawData = try! Day15Test.parser.parse(day15Data)
+        
+        XCTAssertEqual(509167, rawData.map{ getNumber($0) }.reduce(0, +))
+    }
+    
+    func testHash() {
+        XCTAssertEqual(52, getNumber("HASH"))
+    }
+    
+    func getNumber(_ s: Substring) -> Int {
+//        Determine the ASCII code for the current character of the string.
+//        Increase the current value by the ASCII code you just determined.
+//        Set the current value to itself multiplied by 17.
+//        Set the current value to the remainder of dividing itself by 256.
+        
+        foldl(sequence: s.toCharArray(), base: 0) { (acc, item) in
+            let ascii = Int(item.asciiValue!)
+            return (acc + ascii) * 17 % 256
+        }
     }
     
     static let equalsParser = Parse(input: Substring.self) {
@@ -30,7 +51,7 @@ class Day15Test : XCTestCase {
     
     static let parser = Parse(input: Substring.self) {
         Many{
-            stepParser
+            Prefix{ $0 != "," }
         } separator: {
             ","
         }
