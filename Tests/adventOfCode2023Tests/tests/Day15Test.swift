@@ -19,9 +19,15 @@ class Day15Test : XCTestCase {
     func testPart2Dummy(){
         let rawData = try! Day15Test.parser.parse(day15DummyData)
         let data = rawData.map{ try! Day15Test.stepParser.parse($0)}
-        let focalPower = getFocalPower(data: data)
         
-//        XCTAssertEqual(1320, rawData.map{ getNumber($0) }.reduce(0, +))
+        XCTAssertEqual(145, getFocalPower(data: data))
+    }
+    
+    func testPart2(){
+        let rawData = try! Day15Test.parser.parse(day15Data)
+        let data = rawData.map{ try! Day15Test.stepParser.parse($0)}
+        
+        XCTAssertEqual(259333, getFocalPower(data: data))
     }
     
     func testProcessInstructions() {
@@ -41,7 +47,15 @@ class Day15Test : XCTestCase {
     }
     
     func getFocalPower(data: [Step]) -> Int {
-        return 0
+        let lenses = processInstructions(data: data)
+        
+        return lenses.map{ calcBox(box: $0) }.reduce(0, +)
+    }
+    
+    func calcBox(box: (Int, [Lens])) -> Int {
+        box.1.enumerated().map{ (index, item) in
+            (index + 1) * item.strength * (box.0 + 1)
+        }.reduce(0, +)
     }
         
     func processInstructions(data: [Step]) -> [Int : [Lens]] {
