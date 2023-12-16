@@ -14,6 +14,16 @@ class Day16Test : XCTestCase {
         XCTAssertEqual(6816, part1(data: data))
     }
     
+    func testPart2Dummy(){
+        let data = Day16Test.loadData(filename: "Day16DummyData").lines.map{ $0.toCharArray() }.filter({ !$0.isEmpty })
+        XCTAssertEqual(51, part2(data: data))
+    }
+    
+    func testPart2(){
+        let data = Day16Test.loadData(filename: "Day16Data").lines.map{ $0.toCharArray() }.filter({ !$0.isEmpty })
+        XCTAssertEqual(8163, part2(data: data))
+    }
+    
     func part1(data: [[Character]]) -> Int {
         let paths = findEnergisedPoints(data: data)
         let allPoints = paths.compactMap{ $0 }.map{ $0.point }
@@ -22,6 +32,29 @@ class Day16Test : XCTestCase {
         return setOfPoints.count
     }
 
+    func part2(data: [[Character]]) -> Int {
+        let startPoints = getStartPoints(data: data)
+        let allEnergisedPoints = startPoints.map{ Set(findEnergisedPoints(data: data, startPathPoint: $0).map{ $0.point }) }
+        let max = allEnergisedPoints.max(by: { (a,b) in a.count < b.count })!
+        
+        return max.count
+    }
+    
+    func getStartPoints(data: [[Character]]) -> [PathPoint] {
+        let height = data.count
+        let width = data[0].count
+        
+        let verticals = (0..<width).flatMap{ x in
+            [PathPoint(Point(x, 0), Direction.South), PathPoint(Point(x, height-1), Direction.North)]
+        }
+        
+        let horizontals = (0..<height).flatMap{ y in
+            [PathPoint(Point(0, y), Direction.East), PathPoint(Point(width-1, y), Direction.West)]
+        }
+        
+        return verticals + horizontals
+    }
+    
     func printPoints(data: [Point], width: Int, height: Int, orginal: [[Character]], printOrig: Bool = false) {
         let setOfPoints = Set(data)
         
@@ -34,11 +67,11 @@ class Day16Test : XCTestCase {
         })
     }
     
-    func findEnergisedPoints(data: [[Character]]) -> Set<PathPoint> {
+    func findEnergisedPoints(data: [[Character]], startPathPoint: PathPoint = PathPoint(Point(0, 0), Direction.East)) -> Set<PathPoint> {
         let height = data.count
         let width = data[0].count
-        var pathsToProcess = [PathPoint(Point(0, 0), Direction.East)]
-        var energisedPoints: Set<PathPoint> = [PathPoint(Point(0, 0), Direction.East)]
+        var pathsToProcess = [startPathPoint]
+        var energisedPoints: Set<PathPoint> = [startPathPoint]
         
         while !pathsToProcess.isEmpty {
             let current = pathsToProcess.removeFirst()
