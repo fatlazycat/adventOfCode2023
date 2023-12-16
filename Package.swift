@@ -29,6 +29,9 @@ let package = Package(
                 "adventOfCode2023",
                 .product(name: "Parsing", package: "swift-parsing"),
                 .product(name: "SwiftHamcrest", package: "SwiftHamcrest"),
-            ]),
+            ],
+            resources: [
+                .process("dataFiles") // Process resources in the "Resources" folder
+            ])
     ]
 )
