@@ -18,8 +18,36 @@ class Day17Test : XCTestCase {
                 n.p.x >= 0 && n.p.x < width && n.p.y >= 0 && n.p.y < height })},
             heuristic: { p in data[p.p.y][p.p.x] })
         
+        let answer = path.getPath()
+//        printPoints(data: answer, width: width, height: height)
+        
         XCTAssertEqual(102, path.getScore())
     }
+    
+//    func printPoints(data: [PathPoint], width: Int, height: Int) {
+//        let mapOfPoints = Dictionary(uniqueKeysWithValues: data.map{ ($0.p, $0) })
+//        
+//        (0..<height).forEach({ y in
+//            let chars = (0..<width).map{ x in
+//                if let p = mapOfPoints[Point(x, y)] {
+//                    switch p.d {
+//                    case .North:
+//                        "^"
+//                    case .South:
+//                        "v"
+//                    case .West:
+//                        "<"
+//                    case .East:
+//                        ">"
+//                    }
+//                } else {
+//                    "."
+//                }
+//            }.joined()
+//            
+//            print(chars)
+//        })
+//    }
     
     func parseData(lines: [String]) -> [[Int]] {
         lines.map{ $0.toCharArray() }.map{ array in array.map{ Int(String($0))! } }
