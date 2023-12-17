@@ -17,6 +17,8 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/pointfreeco/swift-parsing", .upToNextMajor(from: "0.13.0")),
         .package(url: "https://github.com/nschum/SwiftHamcrest", .upToNextMajor(from: "2.2.4")),
+        .package(url: "https://github.com/apple/swift-collections.git", .upToNextMinor(from: "1.0.0")),
+        .package(url: "https://github.com/davecom/SwiftPriorityQueue", .upToNextMinor(from: "1.3.0")),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -29,6 +31,8 @@ let package = Package(
                 "adventOfCode2023",
                 .product(name: "Parsing", package: "swift-parsing"),
                 .product(name: "SwiftHamcrest", package: "SwiftHamcrest"),
+                .product(name: "Collections", package: "swift-collections"),
+                .product(name: "SwiftPriorityQueue", package: "SwiftPriorityQueue"),
             ],
             resources: [
                 .process("dataFiles") // Process resources in the "Resources" folder
