@@ -14,6 +14,16 @@ class Day17Test : XCTestCase {
         XCTAssertEqual(870, part1(data: data))
     }
     
+    func testPart2Dummy(){
+        let data = parseData(lines: day17DummyData.lines)
+        XCTAssertEqual(94, part2(data: data))
+    }
+    
+    func testPart2(){
+        let data = parseData(lines: day17Data.lines)
+        XCTAssertEqual(1063, part2(data: data))
+    }
+    
     func part1(data: [[Int]]) -> Int {
         let width = data[0].count
         let height = data.count
@@ -24,6 +34,22 @@ class Day17Test : XCTestCase {
             start: start,
             endFunction: { p in p.p == end },
             neighbours: { $0.neighbours().filter({ n in
+                n.p.x >= 0 && n.p.x < width && n.p.y >= 0 && n.p.y < height })},
+            cost: { (_, p) in data[p.p.y][p.p.x] })
+        
+        return path.getScore()
+    }
+    
+    func part2(data: [[Int]]) -> Int {
+        let width = data[0].count
+        let height = data.count
+        let start = PathPoint(Point(0, 0), Direction.East, 0)
+        let end = Point(width-1, height-1)
+        
+        let path = findShortestPathByPredicate(
+            start: start,
+            endFunction: { p in p.p == end },
+            neighbours: { $0.ultraNeighbours().filter({ n in
                 n.p.x >= 0 && n.p.x < width && n.p.y >= 0 && n.p.y < height })},
             cost: { (_, p) in data[p.p.y][p.p.x] })
         
@@ -85,6 +111,47 @@ class Day17Test : XCTestCase {
                 }
                 result.append(PathPoint(Point(p.x, p.y-1), Direction.North, 1))
                 result.append(PathPoint(Point(p.x, p.y+1), Direction.South, 1))
+            }
+            
+            return result
+        }
+        
+        func ultraNeighbours() -> [PathPoint] {
+            var result: [PathPoint] = []
+            
+            switch d {
+            case .North:
+                if l < 10 {
+                    result.append(PathPoint(Point(p.x, p.y-1), Direction.North, l+1))
+                }
+                if l == 0 || l >= 4 {
+                    result.append(PathPoint(Point(p.x-1, p.y), Direction.West, 1))
+                    result.append(PathPoint(Point(p.x+1, p.y), Direction.East, 1))
+                }
+            case .South:
+                if l < 10 {
+                    result.append(PathPoint(Point(p.x, p.y+1), Direction.South, l+1))
+                }
+                if l == 0 || l >= 4 {
+                    result.append(PathPoint(Point(p.x-1, p.y), Direction.West, 1))
+                    result.append(PathPoint(Point(p.x+1, p.y), Direction.East, 1))
+                }
+            case .West:
+                if l < 10 {
+                    result.append(PathPoint(Point(p.x-1, p.y), Direction.West, l+1))
+                }
+                if l == 0 || l >= 4 {
+                    result.append(PathPoint(Point(p.x, p.y-1), Direction.North, 1))
+                    result.append(PathPoint(Point(p.x, p.y+1), Direction.South, 1))
+                }
+            case .East:
+                if l < 10 {
+                    result.append(PathPoint(Point(p.x+1, p.y), Direction.East, l+1))
+                }
+                if l == 0 || l >= 4 {
+                    result.append(PathPoint(Point(p.x, p.y-1), Direction.North, 1))
+                    result.append(PathPoint(Point(p.x, p.y+1), Direction.South, 1))
+                }
             }
             
             return result
