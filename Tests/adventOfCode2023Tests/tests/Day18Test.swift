@@ -9,9 +9,35 @@ class Day18Test : XCTestCase {
         XCTAssertEqual(62, part1(data: data))
     }
     
-    func testPart1(){
+//    func testPart1(){
+//        let data = try! Day18Test.parser.parse(day18Data).map{ Input(direction: $0.0, num: $0.1, code: $0.2) }
+//        XCTAssertEqual(108909, part1(data: data))
+//    }
+    
+    func testPart1DummyAgain(){
+        let data = try! Day18Test.parser.parse(day18DummyData).map{ Input(direction: $0.0, num: $0.1, code: $0.2) }
+        XCTAssertEqual(62, picksTheorem(data: data))
+    }
+    
+    func testPart1Again(){
         let data = try! Day18Test.parser.parse(day18Data).map{ Input(direction: $0.0, num: $0.1, code: $0.2) }
-        XCTAssertEqual(62, part1(data: data)) // 47920 too low
+        XCTAssertEqual(108909, picksTheorem(data: data))
+    }
+
+    func picksTheorem(data: [Input]) -> Int {
+        let vectors = createVectors(data: data)
+        let walls = createPointsOfTrench(data: data)
+        let revVectors: [(Point, Point)] = vectors.reversed()
+        return Int(floor(polygonArea(data: revVectors))) + (walls.count/2) + 1
+    }
+    
+    func polygonArea(data: [(Point, Point)]) -> Double {
+        var doubleArea = 0.0
+        data.forEach({ edge in
+            doubleArea += (Double(edge.0.x) * Double(edge.1.y)) - (Double(edge.0.y) * Double(edge.1.x))
+        })
+        
+        return doubleArea / 2.0
     }
     
     func part1(data: [Input]) -> Int {
@@ -43,6 +69,30 @@ class Day18Test : XCTestCase {
             (start.x..<width).forEach({ x in
                 result.append(Point(x, y))
             })
+        })
+        
+        return result
+    }
+    
+    func createVectors(data: [Input]) -> [(Point, Point)] {
+        var current = Point(0,0)
+        var result = [(Point, Point)]()
+        
+        data.forEach({ input in
+            switch input.direction {
+            case .Up:
+                result.append((Point(current.x, current.y), Point(current.x, current.y-input.num)))
+                current = Point(current.x, current.y - input.num)
+            case .Down:
+                result.append((Point(current.x, current.y), Point(current.x, current.y+input.num)))
+                current = Point(current.x, current.y + input.num)
+            case .Left:
+                result.append((Point(current.x, current.y), Point(current.x - input.num, current.y)))
+                current = Point(current.x - input.num, current.y)
+            case .Right:
+                result.append((Point(current.x, current.y), Point(current.x + input.num, current.y)))
+                current = Point(current.x + input.num, current.y)
+            }
         })
         
         return result
