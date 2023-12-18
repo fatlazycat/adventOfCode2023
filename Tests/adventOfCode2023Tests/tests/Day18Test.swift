@@ -16,30 +16,31 @@ class Day18Test : XCTestCase {
     
     func part1(data: [Input]) -> Int {
         let walls = createPointsOfTrench(data: data)
+        let minX = walls.map{ $0.point.x }.min()!
+        let maxX = walls.map{ $0.point.x }.max()!
+        let minY = walls.map{ $0.point.y }.min()!
+        let maxY = walls.map{ $0.point.y }.max()!
+        let start = Point(minX, minY)
         let wallPoints = walls.map{ $0.point }
         let setOfWallPoints = Set(wallPoints)
         let boundaries = Dictionary(uniqueKeysWithValues: walls.map{($0.point, $0.endPoint)})
-        let width = walls.map{ $0.point.x }.max()!+1
-        let height = walls.map{ $0.point.y }.max()!+1
-        let allPoints = allPoints(width: width, height: height).filter({!wallPoints.contains($0)})
+        let width = maxX - minX
+        let height = maxY - minY
+        let allPoints = allPoints(start: start, width: width, height: height).filter({!wallPoints.contains($0)})
         let contained = allPoints.filter({
-            wallCounts(p: $0, width: width, height: height, loop: setOfWallPoints, boundaries: boundaries ).isOdd()
+            wallCounts(p: $0, start: start, width: width, height: height, loop: setOfWallPoints, boundaries: boundaries ).isOdd()
         })
         
-        printWallPoints(data: walls, width: width, height: height)
-//        print("---")
-//        printPoints(data: contained, width: width, height: height)
-//        print("---")
-//        printPoints(data: wallPoints, width: width, height: height)
+//        printWallPoints(data: walls, start: start, width: width, height: height)
         
         return contained.count + walls.count
     }
     
-    func allPoints(width: Int, height: Int) -> [Point] {
+    func allPoints(start: Point, width: Int, height: Int) -> [Point] {
         var result = [Point]()
         
-        (0..<height).forEach({ y in
-            (0..<width).forEach({ x in
+        (start.y..<height).forEach({ y in
+            (start.x..<width).forEach({ x in
                 result.append(Point(x, y))
             })
         })
@@ -50,7 +51,7 @@ class Day18Test : XCTestCase {
     func createPointsOfTrench(data: [Input]) -> [WallPoint] {
         var current = Point(0,0)
         var result = [WallPoint]()
-        var vals: [[Input]] = data.windowed(size: 2, step: 1) + [[data.last!, data.first!]]
+        let vals: [[Input]] = data.windowed(size: 2, step: 1) + [[data.last!, data.first!]]
         
         vals.forEach({ val in
             let input = val[0]
@@ -89,11 +90,11 @@ class Day18Test : XCTestCase {
         return result
     }
     
-    func wallCounts(p: Point, width: Int, height: Int, loop: Set<Point>, boundaries: [Point : Bool]) -> Int {
+    func wallCounts(p: Point, start: Point, width: Int, height: Int, loop: Set<Point>, boundaries: [Point : Bool]) -> Int {
         var focus = Point(p.x-1, p.y)
         var intersections = 0
         
-        while focus.x >= 0 {
+        while focus.x >= start.x {
             if loop.contains(focus) && boundaries[focus]! {
                 intersections += 1
             }
@@ -142,11 +143,11 @@ class Day18Test : XCTestCase {
         }
     }
     
-    func printPoints(data: [Point], width: Int, height: Int) {
+    func printPoints(data: [Point], start: Point, width: Int, height: Int) {
         let mapOfPoints = Set(data)
         
-        (0..<height).forEach({ y in
-            let chars = (0..<width).map{ x in
+        (start.y..<height).forEach({ y in
+            let chars = (start.x..<width).map{ x in
                 mapOfPoints.contains(Point(x, y)) ? "#" : "."
             }.joined()
             
@@ -154,11 +155,11 @@ class Day18Test : XCTestCase {
         })
     }
     
-    func printWallPoints(data: [WallPoint], width: Int, height: Int) {
+    func printWallPoints(data: [WallPoint], start: Point, width: Int, height: Int) {
         let mapOfPoints = Dictionary(uniqueKeysWithValues: data.map{ ($0.point, $0) })
         
-        (0..<height).forEach({ y in
-            let chars = (0..<width).map{ x in
+        (start.y..<height).forEach({ y in
+            let chars = (start.x..<width).map{ x in
                 if let wallPoint = mapOfPoints[Point(x, y)] {
                     wallPoint.endPoint ? "O" : "#"
                 } else {
