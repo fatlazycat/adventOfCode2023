@@ -23,7 +23,26 @@ class Day18Test : XCTestCase {
         let data = try! Day18Test.parser.parse(day18Data).map{ Input(direction: $0.0, num: $0.1, code: $0.2) }
         XCTAssertEqual(108909, picksTheorem(data: data))
     }
+    
+    func testPart2Dummy() {
+        let data = try! Day18Test.parser.parse(day18DummyData)
+            .map{ Input(direction: $0.0, num: $0.1, code: $0.2) }
+            .map{ i in
+                let correct = i.getDetailsFromCode()
+                return Input(direction: correct.0, num: correct.1)}
+        XCTAssertEqual(952408144115, picksTheorem(data: data))
+    }
 
+// Slow
+//    func testPart2() {
+//        let data = try! Day18Test.parser.parse(day18Data)
+//            .map{ Input(direction: $0.0, num: $0.1, code: $0.2) }
+//            .map{ i in
+//                let correct = i.getDetailsFromCode()
+//                return Input(direction: correct.0, num: correct.1)}
+//        XCTAssertEqual(133125706867777, picksTheorem(data: data))
+//    }
+    
     func picksTheorem(data: [Input]) -> Int {
         let vectors = createVectors(data: data)
         let walls = createPointsOfTrench(data: data)
@@ -161,6 +180,13 @@ class Day18Test : XCTestCase {
         let endPoint: Bool
     }
     
+    func testCode() {
+        let result = Input(direction: "R", num: 0, code: "70c710").getDetailsFromCode()
+        
+        XCTAssertEqual(Direction.Right, result.0)
+        XCTAssertEqual(461937, result.1)
+    }
+    
     struct Input: Equatable, Hashable {
         let direction: Direction
         let num: Int
@@ -170,6 +196,27 @@ class Day18Test : XCTestCase {
             self.direction = Direction(rawValue: String(direction))!
             self.num = num
             self.colour = code
+        }
+        
+        init(direction: Direction, num: Int) {
+            self.direction = direction
+            self.num = num
+            self.colour = ""
+        }
+        
+        func getDetailsFromCode() -> (Direction, Int) {
+            let direction = switch colour.last! {
+                case "0" : Direction.Right
+                case "1" : Direction.Down
+                case "2" : Direction.Left
+                case "3" : Direction.Up
+                default:
+                    fatalError("Whoops")
+                }
+            
+            let number = Int(colour.dropLast(), radix: 16)!
+            
+            return (direction, number)
         }
     }
     
