@@ -6,6 +6,15 @@ class Day17Test : XCTestCase {
     
     func testPart1Dummy(){
         let data = parseData(lines: day17DummyData.lines)
+        XCTAssertEqual(102, part1(data: data))
+    }
+    
+    func testPart1(){
+        let data = parseData(lines: day17Data.lines)
+        XCTAssertEqual(870, part1(data: data))
+    }
+    
+    func part1(data: [[Int]]) -> Int {
         let width = data[0].count
         let height = data.count
         let start = PathPoint(Point(0, 0), Direction.East, 0)
@@ -16,38 +25,22 @@ class Day17Test : XCTestCase {
             endFunction: { p in p.p == end },
             neighbours: { $0.neighbours().filter({ n in
                 n.p.x >= 0 && n.p.x < width && n.p.y >= 0 && n.p.y < height })},
-            heuristic: { p in data[p.p.y][p.p.x] })
+            cost: { (_, p) in data[p.p.y][p.p.x] })
         
-        let answer = path.getPath()
-//        printPoints(data: answer, width: width, height: height)
-        
-        XCTAssertEqual(102, path.getScore())
+        return path.getScore()
     }
     
-//    func printPoints(data: [PathPoint], width: Int, height: Int) {
-//        let mapOfPoints = Dictionary(uniqueKeysWithValues: data.map{ ($0.p, $0) })
-//        
-//        (0..<height).forEach({ y in
-//            let chars = (0..<width).map{ x in
-//                if let p = mapOfPoints[Point(x, y)] {
-//                    switch p.d {
-//                    case .North:
-//                        "^"
-//                    case .South:
-//                        "v"
-//                    case .West:
-//                        "<"
-//                    case .East:
-//                        ">"
-//                    }
-//                } else {
-//                    "."
-//                }
-//            }.joined()
-//            
-//            print(chars)
-//        })
-//    }
+    func printPoints(data: [PathPoint], width: Int, height: Int) {
+        let mapOfPoints = Set(data.map{ $0.p })
+        
+        (0..<height).forEach({ y in
+            let chars = (0..<width).map{ x in
+                mapOfPoints.contains(Point(x, y)) ? "#" : "."
+            }.joined()
+            
+            print(chars)
+        })
+    }
     
     func parseData(lines: [String]) -> [[Int]] {
         lines.map{ $0.toCharArray() }.map{ array in array.map{ Int(String($0))! } }
@@ -79,7 +72,7 @@ class Day17Test : XCTestCase {
                     result.append(PathPoint(Point(p.x, p.y+1), Direction.South, l+1))
                 }
                 result.append(PathPoint(Point(p.x-1, p.y), Direction.West, 1))
-                result.append(PathPoint(Point(p.x+1, p.y), Direction.East, 1))
+            result.append(PathPoint(Point(p.x+1, p.y), Direction.East, 1))
             case .West:
                 if l < 3 {
                     result.append(PathPoint(Point(p.x-1, p.y), Direction.West, l+1))

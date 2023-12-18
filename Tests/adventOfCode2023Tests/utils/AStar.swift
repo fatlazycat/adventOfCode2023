@@ -1,3 +1,4 @@
+
 import Foundation
 import SwiftPriorityQueue
 
@@ -34,25 +35,29 @@ func findShortestPathByPredicate<K: Hashable>(
     cost: @escaping CostFunction<K> = { _, _ in 1 },
     heuristic: @escaping HeuristicFunction<K> = { _ in 0 }
 ) -> GraphSearchResult<K> {
-    var toVisit = PriorityQueue<ScoredVertex<K>>(startingValues: [ScoredVertex(vertex: start, score: 0, heuristic: heuristic(start))])
-
+    var toVisit = PriorityQueue<ScoredVertex<K>>(ascending: true, startingValues: [ScoredVertex(vertex: start, score: 0, heuristic: heuristic(start))])
     var endVertex: K? = nil
     var seenPoints: [K: SeenVertex<K>] = [start: SeenVertex(cost: 0, prev: nil)]
 
     while endVertex == nil {
-        guard let current = toVisit.pop() else {
+        if toVisit.isEmpty {
             return GraphSearchResult(start: start, end: nil, result: seenPoints)
         }
 
+        let current = toVisit.pop()!
         let currentVertex = current.vertex
+        
         if endFunction(currentVertex) {
             endVertex = currentVertex
+        } else {
+            endVertex = nil
         }
 
         for next in neighbours(currentVertex).filter({ seenPoints[$0] == nil }) {
             let nextScore = current.score + cost(currentVertex, next)
-            toVisit.push(ScoredVertex(vertex: next, score: nextScore, heuristic: heuristic(next)))
-            seenPoints[next] = SeenVertex(cost: nextScore, prev: currentVertex)
+            let nextPoint = ScoredVertex(vertex: next, score: nextScore, heuristic: heuristic(next))
+            toVisit.push(nextPoint)
+            seenPoints[nextPoint.vertex] = SeenVertex(cost: nextPoint.score, prev: currentVertex)
         }
     }
 

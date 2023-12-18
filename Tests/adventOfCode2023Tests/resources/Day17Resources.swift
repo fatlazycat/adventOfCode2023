@@ -1,6 +1,14 @@
 
 import Foundation
 
+//let day17DummyData = """
+//11999
+//91199
+//99119
+//99919
+//99911
+//"""
+
 let day17DummyData = """
 2413432311323
 3215453535623
