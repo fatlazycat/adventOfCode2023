@@ -27,73 +27,91 @@ class Day19Test : XCTestCase {
         XCTAssertEqual(167409079868000, part2(workflowMap: workflowMap))
     }
     
+    func testPart2(){
+        let rawData = parseData(lines: day19Data.lines)
+        let workflows = rawData[0].map{ try! Day19Test.workflowParser.parse($0) }.map{ Workflow.init(name: $0.0, rules: $0.1) }
+        let workflowMap = Dictionary(uniqueKeysWithValues: workflows.map{ ($0.name, $0) })
+        XCTAssertEqual(122112157518711, part2(workflowMap: workflowMap))
+    }
+    
     func part1(ratings: [Rating], workflowMap: [Substring : Workflow]) -> Int {
         ratings.filter({ isAccepted(rating: $0, workflowMap: workflowMap) }).map{ $0.sum() }.reduce(0, +)
     }
     
     func part2(workflowMap: [Substring : Workflow]) -> Int {
         let range = XmasRange(x: Range(lower: 1, upper: 4000), m: Range(lower: 1, upper: 4000), a: Range(lower: 1, upper: 4000), s: Range(lower: 1, upper: 4000))
-        let result = acceptedRanges(xmasRange: range, current: workflowMap["in"]!, workflowMap: workflowMap, acc: [])
+        let result = acceptedRanges(xmasRange: range, rules: workflowMap["in"]!.rules, workflowMap: workflowMap)
+        
+        print(result)
         
         return result.map{ $0.getCombinations() }.reduce(0, +)
     }
     
-    func acceptedRanges(xmasRange: XmasRange, current: Workflow, workflowMap: [Substring : Workflow], acc: [XmasRange]) -> [XmasRange] {
-        let rules = current.rules
-        let result = rules.flatMap{ rule in
-            switch rule {
-            case .Accept:
-                return acc + [xmasRange]
-            case .Reject:
-                return acc
-            case .Condition(let ruleRating, let cond, let num, let destination):
-                if destination == "A" {
-                    return acc + [xmasRange]
-                } else if destination == "R" {
-                    return acc
-                } else {
-                    let newRange = updateRange(xmasRange: xmasRange, ruleRating: ruleRating, cond: cond, num: num)
-                    return acceptedRanges(xmasRange: newRange, current: workflowMap[destination]!, workflowMap: workflowMap, acc: acc)
-                }
-            case .Destination(let destination):
-                if destination == "A" {
-                    return acc + [xmasRange]
-                } else if destination == "R" {
-                    return acc
-                } else {
-                    return acceptedRanges(xmasRange: xmasRange, current: workflowMap[destination]! ,workflowMap: workflowMap, acc: acc)
-                }
+    func acceptedRanges(xmasRange: XmasRange, rules: [Rule], workflowMap: [Substring : Workflow]) -> [XmasRange] {
+        
+        let rule = rules.first!
+        let restOfRules = rules.dropFirst()
+        
+        switch rule {
+        case .Accept:
+            return [xmasRange]
+        case .Reject:
+            return []
+        case .Condition(let ruleRating, let cond, let num, let destination):
+            let newRanges = updateRange(r: xmasRange, ruleRating: ruleRating, cond: cond, num: num)
+            
+            if destination == "A" {
+                return [newRanges.0] + acceptedRanges(xmasRange: newRanges.1, rules: Array(restOfRules), workflowMap: workflowMap)
+            } else if destination == "R" {
+                return [] + acceptedRanges(xmasRange: newRanges.1, rules: Array(restOfRules), workflowMap: workflowMap)
+            } else {
+                return acceptedRanges(xmasRange: newRanges.0, rules: workflowMap[destination]!.rules, workflowMap: workflowMap) +
+                acceptedRanges(xmasRange: newRanges.1, rules: Array(restOfRules), workflowMap: workflowMap)
+            }
+        case .Destination(let destination):
+            if destination == "A" {
+                return [xmasRange]
+            } else if destination == "R" {
+                return []
+            } else {
+                return acceptedRanges(xmasRange: xmasRange, rules: workflowMap[destination]!.rules ,workflowMap: workflowMap)
             }
         }
-        
-        return result
     }
     
-    func updateRange(xmasRange: XmasRange, ruleRating: Substring, cond: Character, num: Int) -> XmasRange {
+    func updateRange(r: XmasRange, ruleRating: Substring, cond: Character, num: Int) -> (XmasRange, XmasRange) {
         let newRange = switch ruleRating {
         case "x":
             if cond == "<" {
-                XmasRange(x: Range(lower: xmasRange.x.lower, upper: num-1), m: xmasRange.m, a: xmasRange.a, s: xmasRange.s)
+                (XmasRange(x: Range(lower: r.x.lower, upper: num-1), m: r.m, a: r.a, s: r.s),
+                 XmasRange(x: Range(lower: num, upper: r.x.upper), m: r.m, a: r.a, s: r.s))
             } else {
-                XmasRange(x: Range(lower: num + 1, upper: xmasRange.x.upper), m: xmasRange.m, a: xmasRange.a, s: xmasRange.s)
+                (XmasRange(x: Range(lower: num + 1, upper: r.x.upper), m: r.m, a: r.a, s: r.s),
+                 XmasRange(x: Range(lower: r.x.lower, upper: num), m: r.m, a: r.a, s: r.s))
             }
         case "m":
             if cond == "<" {
-                XmasRange(x: xmasRange.x, m: Range(lower: xmasRange.m.lower, upper: num - 1), a: xmasRange.a, s: xmasRange.s)
+                (XmasRange(x: r.x, m: Range(lower: r.m.lower, upper: num - 1), a: r.a, s: r.s),
+                 XmasRange(x: r.x, m: Range(lower: num, upper: r.m.upper), a: r.a, s: r.s))
             } else {
-                XmasRange(x: xmasRange.x, m: Range(lower: num + 1, upper: xmasRange.m.upper), a: xmasRange.a, s: xmasRange.s)
+                (XmasRange(x: r.x, m: Range(lower: num + 1, upper: r.m.upper), a: r.a, s: r.s),
+                 XmasRange(x: r.x, m: Range(lower: r.m.lower, upper: num), a: r.a, s: r.s))
             }
         case "a":
             if cond == "<" {
-                XmasRange(x: xmasRange.x, m: xmasRange.m, a: Range(lower: xmasRange.a.lower, upper: num - 1), s: xmasRange.s)
+                (XmasRange(x: r.x, m: r.m, a: Range(lower: r.a.lower, upper: num - 1), s: r.s),
+                 XmasRange(x: r.x, m: r.m, a: Range(lower: num, upper: r.a.upper), s: r.s))
             } else {
-                XmasRange(x: xmasRange.x, m: xmasRange.m, a: Range(lower: num + 1, upper: xmasRange.a.upper), s: xmasRange.s)
+                (XmasRange(x: r.x, m: r.m, a: Range(lower: num + 1, upper: r.a.upper), s: r.s),
+                 XmasRange(x: r.x, m: r.m, a: Range(lower: r.a.lower, upper: num), s: r.s))
             }
         case "s":
             if cond == "<" {
-                XmasRange(x: xmasRange.x, m: xmasRange.m, a: xmasRange.a, s: Range(lower: xmasRange.s.lower, upper: num - 1))
+                (XmasRange(x: r.x, m: r.m, a: r.a, s: Range(lower: r.s.lower, upper: num - 1)),
+                 XmasRange(x: r.x, m: r.m, a: r.a, s: Range(lower: num, upper: r.s.upper)))
             } else {
-                XmasRange(x: xmasRange.x, m: xmasRange.m, a: xmasRange.a, s: Range(lower: num + 1, upper: xmasRange.s.upper))
+                (XmasRange(x: r.x, m: r.m, a: r.a, s: Range(lower: num + 1, upper: r.s.upper)),
+                 XmasRange(x: r.x, m: r.m, a: r.a, s: Range(lower: r.s.lower, upper: num)))
             }
         default:
             fatalError("Unknown type")
