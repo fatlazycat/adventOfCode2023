@@ -42,8 +42,6 @@ class Day19Test : XCTestCase {
         let range = XmasRange(x: Range(lower: 1, upper: 4000), m: Range(lower: 1, upper: 4000), a: Range(lower: 1, upper: 4000), s: Range(lower: 1, upper: 4000))
         let result = acceptedRanges(xmasRange: range, rules: workflowMap["in"]!.rules, workflowMap: workflowMap)
         
-        print(result)
-        
         return result.map{ $0.getCombinations() }.reduce(0, +)
     }
     
@@ -142,9 +140,8 @@ class Day19Test : XCTestCase {
     
     func isAccepted(rating: Rating, workflowMap: [Substring : Workflow]) -> Bool {
         var current = workflowMap["in"]!
-        var stop = false
         
-        while !stop {
+        while true {
             let rules = current.rules
             let result = rules.first(where: {ruleMatch(rule: $0, rating: rating)})!
             
