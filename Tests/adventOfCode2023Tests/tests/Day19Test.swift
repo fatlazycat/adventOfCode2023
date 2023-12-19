@@ -8,16 +8,14 @@ class Day19Test : XCTestCase {
         let rawData = parseData(lines: day19DummyData.lines)
         let workflows = rawData[0].map{ try! Day19Test.workflowParser.parse($0) }
         let ratings = rawData[1].map{ try! Day19Test.ratingParser.parse($0) }
-        let workflowMap = Dictionary(uniqueKeysWithValues: workflows.map{ ($0.name, $0) })
-        XCTAssertEqual(19114, part1(ratings: ratings, workflowMap: workflowMap))
+        XCTAssertEqual(19114, part1Again(ratings: ratings, workflows: workflows))
     }
     
     func testPart1(){
         let rawData = parseData(lines: day19Data.lines)
         let workflows = rawData[0].map{ try! Day19Test.workflowParser.parse($0) }
         let ratings = rawData[1].map{ try! Day19Test.ratingParser.parse($0) }
-        let workflowMap = Dictionary(uniqueKeysWithValues: workflows.map{ ($0.name, $0) })
-        XCTAssertEqual(374873, part1(ratings: ratings, workflowMap: workflowMap))
+        XCTAssertEqual(374873, part1Again(ratings: ratings, workflows: workflows))
     }
     
     func testPart2Dummy(){
@@ -34,8 +32,13 @@ class Day19Test : XCTestCase {
         XCTAssertEqual(122112157518711, part2(workflowMap: workflowMap))
     }
     
-    func part1(ratings: [Rating], workflowMap: [Substring : Workflow]) -> Int {
-        ratings.filter({ isAccepted(rating: $0, workflowMap: workflowMap) }).map{ $0.sum() }.reduce(0, +)
+    func part1Again(ratings: [Rating], workflows: [Workflow]) -> Int {
+        let workflowMap = Dictionary(uniqueKeysWithValues: workflows.map{ ($0.name, $0) })
+        let range = XmasRange(x: Range(lower: 1, upper: 4000), m: Range(lower: 1, upper: 4000), a: Range(lower: 1, upper: 4000), s: Range(lower: 1, upper: 4000))
+        let acceptedRanges = acceptedRanges(xmasRange: range, rules: workflowMap["in"]!.rules, workflowMap: workflowMap)
+        let accepted = ratings.filter({ rating in acceptedRanges.first{ $0.contained(otherX: rating.x, otherM: rating.m, otherA: rating.a, otherS: rating.s)} != nil })
+        
+        return accepted.map{ $0.sum() }.reduce(0, +)
     }
     
     func part2(workflowMap: [Substring : Workflow]) -> Int {
@@ -46,7 +49,6 @@ class Day19Test : XCTestCase {
     }
     
     func acceptedRanges(xmasRange: XmasRange, rules: [Rule], workflowMap: [Substring : Workflow]) -> [XmasRange] {
-        
         let rule = rules.first!
         let restOfRules = rules.dropFirst()
         
@@ -130,70 +132,18 @@ class Day19Test : XCTestCase {
             (a.upper - a.lower + 1) *
             (s.upper - s.lower + 1)
         }
+        
+        func contained(otherX: Int, otherM: Int, otherA: Int, otherS: Int) -> Bool {
+            otherX >= x.lower && otherX <= x.upper &&
+            otherM >= m.lower && otherM <= m.upper &&
+            otherA >= a.lower && otherA <= a.upper &&
+            otherS >= s.lower && otherS <= s.upper
+        }
     }
     
     struct Range {
         let lower: Int
         let upper: Int
-    }
-    
-    
-    func isAccepted(rating: Rating, workflowMap: [Substring : Workflow]) -> Bool {
-        var current = workflowMap["in"]!
-        
-        while true {
-            let rules = current.rules
-            let result = rules.first(where: {ruleMatch(rule: $0, rating: rating)})!
-            
-            switch result {
-            case .Accept:
-                return true
-            case .Reject:
-                return false
-            case .Condition(_, _, _, let destination):
-                if destination == "A" {
-                    return true
-                } else if destination == "R" {
-                    return false
-                }
-                current = workflowMap[destination]!
-            case .Destination(let destination):
-                if destination == "A" {
-                    return true
-                } else if destination == "R" {
-                    return false
-                }
-                current = workflowMap[destination]!
-            }
-        }
-    }
-    
-    func ruleMatch(rule: Rule, rating: Rating) -> Bool {
-        return switch rule {
-        case .Condition(let ruleRating, let cond, let num, _):
-            switch ruleRating {
-            case "x":
-                compareRule(val: rating.x, cond: cond, num: num)
-            case "m":
-                compareRule(val: rating.m, cond: cond, num: num)
-            case "a":
-                compareRule(val: rating.a, cond: cond, num: num)
-            case "s":
-                compareRule(val: rating.s, cond: cond, num: num)
-            default:
-                fatalError("Unknown type")
-            }
-        default:
-            true
-        }
-    }
-
-    func compareRule(val: Int, cond: Character, num: Int) -> Bool {
-        if cond == "<" {
-            val < num
-        } else {
-            val > num
-        }
     }
     
     struct Workflow : Equatable, Hashable {
