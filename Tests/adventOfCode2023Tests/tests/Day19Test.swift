@@ -20,9 +20,107 @@ class Day19Test : XCTestCase {
         XCTAssertEqual(374873, part1(ratings: ratings, workflowMap: workflowMap))
     }
     
+    func testPart2Dummy(){
+        let rawData = parseData(lines: day19DummyData.lines)
+        let workflows = rawData[0].map{ try! Day19Test.workflowParser.parse($0) }.map{ Workflow.init(name: $0.0, rules: $0.1) }
+        let workflowMap = Dictionary(uniqueKeysWithValues: workflows.map{ ($0.name, $0) })
+        XCTAssertEqual(167409079868000, part2(workflowMap: workflowMap))
+    }
+    
     func part1(ratings: [Rating], workflowMap: [Substring : Workflow]) -> Int {
         ratings.filter({ isAccepted(rating: $0, workflowMap: workflowMap) }).map{ $0.sum() }.reduce(0, +)
     }
+    
+    func part2(workflowMap: [Substring : Workflow]) -> Int {
+        let range = XmasRange(x: Range(lower: 1, upper: 4000), m: Range(lower: 1, upper: 4000), a: Range(lower: 1, upper: 4000), s: Range(lower: 1, upper: 4000))
+        let result = acceptedRanges(xmasRange: range, current: workflowMap["in"]!, workflowMap: workflowMap, acc: [])
+        
+        return result.map{ $0.getCombinations() }.reduce(0, +)
+    }
+    
+    func acceptedRanges(xmasRange: XmasRange, current: Workflow, workflowMap: [Substring : Workflow], acc: [XmasRange]) -> [XmasRange] {
+        let rules = current.rules
+        let result = rules.flatMap{ rule in
+            switch rule {
+            case .Accept:
+                return acc + [xmasRange]
+            case .Reject:
+                return acc
+            case .Condition(let ruleRating, let cond, let num, let destination):
+                if destination == "A" {
+                    return acc + [xmasRange]
+                } else if destination == "R" {
+                    return acc
+                } else {
+                    let newRange = updateRange(xmasRange: xmasRange, ruleRating: ruleRating, cond: cond, num: num)
+                    return acceptedRanges(xmasRange: newRange, current: workflowMap[destination]!, workflowMap: workflowMap, acc: acc)
+                }
+            case .Destination(let destination):
+                if destination == "A" {
+                    return acc + [xmasRange]
+                } else if destination == "R" {
+                    return acc
+                } else {
+                    return acceptedRanges(xmasRange: xmasRange, current: workflowMap[destination]! ,workflowMap: workflowMap, acc: acc)
+                }
+            }
+        }
+        
+        return result
+    }
+    
+    func updateRange(xmasRange: XmasRange, ruleRating: Substring, cond: Character, num: Int) -> XmasRange {
+        let newRange = switch ruleRating {
+        case "x":
+            if cond == "<" {
+                XmasRange(x: Range(lower: xmasRange.x.lower, upper: num-1), m: xmasRange.m, a: xmasRange.a, s: xmasRange.s)
+            } else {
+                XmasRange(x: Range(lower: num + 1, upper: xmasRange.x.upper), m: xmasRange.m, a: xmasRange.a, s: xmasRange.s)
+            }
+        case "m":
+            if cond == "<" {
+                XmasRange(x: xmasRange.x, m: Range(lower: xmasRange.m.lower, upper: num - 1), a: xmasRange.a, s: xmasRange.s)
+            } else {
+                XmasRange(x: xmasRange.x, m: Range(lower: num + 1, upper: xmasRange.m.upper), a: xmasRange.a, s: xmasRange.s)
+            }
+        case "a":
+            if cond == "<" {
+                XmasRange(x: xmasRange.x, m: xmasRange.m, a: Range(lower: xmasRange.a.lower, upper: num - 1), s: xmasRange.s)
+            } else {
+                XmasRange(x: xmasRange.x, m: xmasRange.m, a: Range(lower: num + 1, upper: xmasRange.a.upper), s: xmasRange.s)
+            }
+        case "s":
+            if cond == "<" {
+                XmasRange(x: xmasRange.x, m: xmasRange.m, a: xmasRange.a, s: Range(lower: xmasRange.s.lower, upper: num - 1))
+            } else {
+                XmasRange(x: xmasRange.x, m: xmasRange.m, a: xmasRange.a, s: Range(lower: num + 1, upper: xmasRange.s.upper))
+            }
+        default:
+            fatalError("Unknown type")
+        }
+        
+        return newRange
+    }
+    
+    struct XmasRange {
+        let x: Range
+        let m: Range
+        let a: Range
+        let s: Range
+        
+        func getCombinations() -> Int {
+            (x.upper - x.lower + 1) *
+            (m.upper - m.lower + 1) *
+            (a.upper - a.lower + 1) *
+            (s.upper - s.lower + 1)
+        }
+    }
+    
+    struct Range {
+        let lower: Int
+        let upper: Int
+    }
+    
     
     func isAccepted(rating: Rating, workflowMap: [Substring : Workflow]) -> Bool {
         var current = workflowMap["in"]!
