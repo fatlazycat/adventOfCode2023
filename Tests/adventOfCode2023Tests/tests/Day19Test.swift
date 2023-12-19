@@ -8,14 +8,14 @@ class Day19Test : XCTestCase {
         let rawData = parseData(lines: day19DummyData.lines)
         let workflows = rawData[0].map{ try! Day19Test.workflowParser.parse($0) }
         let ratings = rawData[1].map{ try! Day19Test.ratingParser.parse($0) }
-        XCTAssertEqual(19114, part1Again(ratings: ratings, workflows: workflows))
+        XCTAssertEqual(19114, part1(ratings: ratings, workflows: workflows))
     }
     
     func testPart1(){
         let rawData = parseData(lines: day19Data.lines)
         let workflows = rawData[0].map{ try! Day19Test.workflowParser.parse($0) }
         let ratings = rawData[1].map{ try! Day19Test.ratingParser.parse($0) }
-        XCTAssertEqual(374873, part1Again(ratings: ratings, workflows: workflows))
+        XCTAssertEqual(374873, part1(ratings: ratings, workflows: workflows))
     }
     
     func testPart2Dummy(){
@@ -32,7 +32,7 @@ class Day19Test : XCTestCase {
         XCTAssertEqual(122112157518711, part2(workflowMap: workflowMap))
     }
     
-    func part1Again(ratings: [Rating], workflows: [Workflow]) -> Int {
+    func part1(ratings: [Rating], workflows: [Workflow]) -> Int {
         let workflowMap = Dictionary(uniqueKeysWithValues: workflows.map{ ($0.name, $0) })
         let range = XmasRange(x: Range(lower: 1, upper: 4000), m: Range(lower: 1, upper: 4000), a: Range(lower: 1, upper: 4000), s: Range(lower: 1, upper: 4000))
         let acceptedRanges = acceptedRanges(xmasRange: range, rules: workflowMap["in"]!.rules, workflowMap: workflowMap)
