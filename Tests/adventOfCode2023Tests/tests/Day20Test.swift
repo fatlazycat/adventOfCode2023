@@ -38,6 +38,7 @@ class Day20Test : XCTestCase {
         XCTAssertEqual(233338595643977, lcm)
     }
     
+    // dot -Tpng -Kdot dag.dot -o dag.png
     func testPrintSample() {
         let data = try! Day20Test.parser.parse(day20Data)
         let graph = constructGraph(data: data)
