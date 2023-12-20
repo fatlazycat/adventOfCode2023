@@ -7,80 +7,108 @@ class Day20Test : XCTestCase {
     func testPart1Dummy(){
         let data = try! Day20Test.parser.parse(day20DummyData)
         let graph = constructGraph(data: data)
-        let result = processPulse(instruction: Instruction(to: "broadcaster", from: "button", pulse: .Low), startingModules: graph)
+        let result = processPulse(instruction: Instruction(to: "broadcaster", from: "button", pulse: .Low), startingModules: graph, buttonPresses: 1000)
         
-        XCTAssertEqual(32000000, result.0 * result.1 * 1000 * 1000)
+        XCTAssertEqual(32000000, result.0 * result.1)
     }
     
-    func processPulse(instruction: Instruction, startingModules: [String : Module]) -> (Int, Int) {
+    func testPart1Dummy2(){
+        let data = try! Day20Test.parser.parse(day20DummyData2)
+        let graph = constructGraph(data: data)
+        let result = processPulse(instruction: Instruction(to: "broadcaster", from: "button", pulse: .Low), startingModules: graph, buttonPresses: 1000)
+        
+        XCTAssertEqual(11687500, result.0 * result.1)
+    }
+    
+    func testPart1(){
+        let data = try! Day20Test.parser.parse(day20Data)
+        let graph = constructGraph(data: data)
+        let result = processPulse(instruction: Instruction(to: "broadcaster", from: "button", pulse: .Low), startingModules: graph, buttonPresses: 1000)
+        
+        XCTAssertEqual(812721756, result.0 * result.1)
+    }
+    
+    func processPulse(instruction: Instruction, startingModules: [String : Module], buttonPresses: Int) -> (Int, Int) {
+        var stop = false
+        var cycles = 0
+        var cycleCounts: [(Int, Int)] = []
         var modules = startingModules
-        var instructions = [instruction]
-        var lowCount = 1
-        var highCount = 0
         
-//        print("===")
-        
-        while !instructions.isEmpty {
-            let i = instructions.removeFirst()
-            let m = modules[i.to]!
-            var pulseType = Pulse.Low
-            var pulseCount = 0
+        while !stop {
+            var instructions = [instruction]
+            var lowCount = 1
+            var highCount = 0
             
-//            print(i.AsString() + "\n")
-            
-            switch m {
-            case .Standard(name: let name, outputs: let outputs):
-                let newInstructions = outputs.map{ Instruction(to: $0, from: name, pulse: i.pulse) }
-                instructions.append(contentsOf: newInstructions)
-                pulseType = i.pulse
-                pulseCount += newInstructions.count
-            case .FlipFlop(name: let name, outputs: let outputs, state: let state):
-                switch i.pulse {
-                case .High:
-                    break
-                case .Low:
-                    switch state {
-                    case .On:
-                        modules[name] = Module.FlipFlop(name: name, outputs: outputs, state: .Off)
+            while !instructions.isEmpty {
+                let i = instructions.removeFirst()
+                let m = modules[i.to]!
+                var pulseType = Pulse.Low
+                var pulseCount = 0
+                
+                switch m {
+                case .Standard(name: let name, outputs: let outputs):
+                    let newInstructions = outputs.map{ Instruction(to: $0, from: name, pulse: i.pulse) }
+                    instructions.append(contentsOf: newInstructions)
+                    pulseType = i.pulse
+                    pulseCount += newInstructions.count
+                case .FlipFlop(name: let name, outputs: let outputs, state: let state):
+                    switch i.pulse {
+                    case .High:
+                        break
+                    case .Low:
+                        switch state {
+                        case .On:
+                            modules[name] = Module.FlipFlop(name: name, outputs: outputs, state: .Off)
+                            let newInstructions = outputs.map{ Instruction(to: $0, from: name, pulse: .Low) }
+                            instructions.append(contentsOf: newInstructions)
+                            pulseType = .Low
+                            pulseCount += newInstructions.count
+                        case .Off:
+                            modules[name] = Module.FlipFlop(name: name, outputs: outputs, state: .On)
+                            let newInstructions = outputs.map{ Instruction(to: $0, from: name, pulse: .High) }
+                            instructions.append(contentsOf: newInstructions)
+                            pulseType = .High
+                            pulseCount += newInstructions.count
+                        }
+                    }
+                case .Conjunction(name: let name, inputs: let inputs, outputs: let outputs):
+                    var updatedInputs = inputs
+                    updatedInputs[i.from] = i.pulse
+                    modules[name] = Module.Conjunction(name: name, inputs: updatedInputs, outputs: outputs)
+                    
+                    if updatedInputs.allSatisfy({ $0.value == .High}) {
                         let newInstructions = outputs.map{ Instruction(to: $0, from: name, pulse: .Low) }
                         instructions.append(contentsOf: newInstructions)
                         pulseType = .Low
                         pulseCount += newInstructions.count
-                    case .Off:
-                        modules[name] = Module.FlipFlop(name: name, outputs: outputs, state: .On)
+                    } else {
                         let newInstructions = outputs.map{ Instruction(to: $0, from: name, pulse: .High) }
                         instructions.append(contentsOf: newInstructions)
                         pulseType = .High
                         pulseCount += newInstructions.count
                     }
                 }
-            case .Conjunction(name: let name, inputs: let inputs, outputs: let outputs):
-                var updatedInputs = inputs
-                updatedInputs[i.from] = i.pulse
-                modules[name] = Module.Conjunction(name: name, inputs: updatedInputs, outputs: outputs)
                 
-                if updatedInputs.allSatisfy({ $0.value == .High}) {
-                    let newInstructions = outputs.map{ Instruction(to: $0, from: name, pulse: .Low) }
-                    instructions.append(contentsOf: newInstructions)
-                    pulseType = .Low
-                    pulseCount += newInstructions.count
-                } else {
-                    let newInstructions = outputs.map{ Instruction(to: $0, from: name, pulse: .High) }
-                    instructions.append(contentsOf: newInstructions)
-                    pulseType = .High
-                    pulseCount += newInstructions.count
+                switch pulseType {
+                case .High:
+                    highCount += pulseCount
+                case .Low:
+                    lowCount += pulseCount
                 }
             }
             
-            switch pulseType {
-            case .High:
-                highCount += pulseCount
-            case .Low:
-                lowCount += pulseCount
+            cycles += 1
+            cycleCounts.append((lowCount, highCount))
+            
+            if modules == startingModules || cycles == 1000 {
+                stop = true
             }
         }
         
-        return (lowCount, highCount)
+        let counts = foldl(sequence: cycleCounts, base: (0,0)){ (acc, i) in (acc.0+i.0, acc.1+i.1) }
+        let multiplier = buttonPresses / cycles
+        
+        return (counts.0 * multiplier, counts.1 * multiplier)
     }
     
     func constructGraph(data: [(Substring, [Substring])]) -> [String : Module] {
@@ -106,15 +134,15 @@ class Day20Test : XCTestCase {
             switch m.0.first! {
             case "%":
                 let name = String(m.0.dropFirst())
-                let outputs = m.1.map{ modules[String($0)]!.moduleName }
+                let outputs = m.1.map{ String($0) }
                 modules[name] = Module.FlipFlop(name: name, outputs: outputs, state: .Off)
             case "&":
                 let name = String(m.0.dropFirst())
-                let outputs = m.1.map{ modules[String($0)]!.moduleName }
+                let outputs = m.1.map{ String($0) }
                 modules[name] = Module.Conjunction(name: name, inputs: [:], outputs: outputs)
             default:
                 let name = String(m.0)
-                let outputs = m.1.map{ modules[String($0)]!.moduleName }
+                let outputs = m.1.map{ String($0) }
                 modules[name] = Module.Standard(name: name, outputs: outputs)
             }
         })
@@ -132,6 +160,28 @@ class Day20Test : XCTestCase {
             }
         })
         
+        // find any inputs that have no outputs themselves and create a standard entry
+        var allInputNames = Set<String>(modules.keys)
+        var allOutputNames = Set<String>()
+        
+        modules.values.forEach({ m in
+                switch m {
+                case .Standard(name: _, outputs: let outputs):
+                    outputs.forEach({allOutputNames.insert($0)})
+                case .FlipFlop(name: _, outputs: let outputs, state: _):
+                    outputs.forEach({allOutputNames.insert($0)})
+                case .Conjunction(name: _, inputs: _, outputs: let outputs):
+                    outputs.forEach({allOutputNames.insert($0)})
+                }
+            })
+        
+        var onlyOutputs = allOutputNames.subtracting(allInputNames)
+        
+        onlyOutputs.forEach({ name in
+            modules[name] = Module.Standard(name: name, outputs: [])
+        })
+        
+        // Add the starting button
         modules["button"] = Module.Standard(name: "button", outputs: ["broadcaster"])
         
         return modules

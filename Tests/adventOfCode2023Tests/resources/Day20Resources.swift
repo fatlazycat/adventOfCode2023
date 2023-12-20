@@ -9,6 +9,14 @@ broadcaster -> a, b, c
 &inv -> a
 """
 
+let day20DummyData2 = """
+broadcaster -> a
+%a -> inv, con
+&inv -> b
+%b -> con
+&con -> output
+"""
+
 let day20Data = """
 %np -> vn
 &lv -> rx
