@@ -38,6 +38,26 @@ class Day20Test : XCTestCase {
         XCTAssertEqual(233338595643977, lcm)
     }
     
+    func testPrintSample() {
+        let data = try! Day20Test.parser.parse(day20Data)
+        let graph = constructGraph(data: data)
+        printDagForGraphviz(data: graph)
+    }
+    
+    func printDagForGraphviz(data: [String : Day20Test.Module]) {
+        print("-------")
+        print("digraph G {")
+        data.keys.forEach({ name in
+            let node = data[name]!
+            
+            node.moduleOutputs.forEach({ output in
+                print("\(name) -> \(output);")
+            })
+        })
+        print("}")
+        print("-------")
+    }
+    
     func processPulseWaitFor(instruction: Instruction, startingModules: [String : Module], waitFor: String) -> Int {
         var stop = false
         var cycles = 0
