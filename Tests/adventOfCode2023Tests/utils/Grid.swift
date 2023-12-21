@@ -4,13 +4,22 @@
 
 import Foundation
 
-struct Point: Hashable {
+struct Point: Equatable, Hashable {
     let x: Int
     let y: Int
 
     init(_ xVal: Int, _ yVal: Int) {
         x = xVal
         y = yVal
+    }
+    
+    func neightboursInVerticalAndHorizontal() -> Set<Point> {
+        [
+            Point(x, y - 1),
+            Point(x, y + 1),
+            Point(x - 1, y),
+            Point(x + 1, y),
+        ]
     }
     
     func neighbours() -> Set<Point> {
