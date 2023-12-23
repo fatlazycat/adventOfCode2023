@@ -36,6 +36,18 @@ struct Point: Equatable, Hashable {
     }
 }
 
+struct Point3D: Equatable, Hashable {
+    let x: Int
+    let y: Int
+    let z: Int
+    
+    init(_ xVal: Int, _ yVal: Int, _ zVal: Int) {
+        x = xVal
+        y = yVal
+        z = zVal
+    }
+}
+
 func getGrid(s: String) -> Dictionary<Point, Int> {
     let data = s.lines
     var entries: [(Point, Int)] = []

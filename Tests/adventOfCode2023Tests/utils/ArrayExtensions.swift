@@ -151,4 +151,16 @@ extension Array where Element: Equatable & Hashable {
                 (child.label ?? "x").allSatisfy { char in ".1234567890".contains(char) }
             }.map { $0.value as? Element }
     }
+    
+    func getAllUniquePairs() -> [(Element, Element)] {
+        var pairs = [(Element, Element)]()
+        
+        for (index, firstElement) in self.enumerated() {
+            for secondElement in self[(index + 1)...] {
+                pairs.append((firstElement, secondElement))
+            }
+        }
+
+        return pairs
+    }
 }
