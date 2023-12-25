@@ -6,15 +6,34 @@ class Day22Test : XCTestCase {
     
     func testPart1Dummy() {
         let bricks = parseData(data: day22DummyData.lines)
-        XCTAssertEqual(5, lowerBricksToFloor(bricks: bricks))
+        XCTAssertEqual(5, bricksThatCanBeDisintegrated(bricks: bricks))
     }
     
     func testPart1() {
         let bricks = parseData(data: day22Data.lines)
-        XCTAssertEqual(407, lowerBricksToFloor(bricks: bricks))
+        XCTAssertEqual(407, bricksThatCanBeDisintegrated(bricks: bricks))
     }
     
-    func lowerBricksToFloor(bricks: [Brick]) -> Int {
+    func bricksThatCanBeDisintegrated(bricks: [Brick]) -> Int {
+        let supports = getSupportingBricks(bricks: bricks)
+        let canBeDisintigrated = getBricksSupportingButCanBeDisintegrated(supports: supports)
+        let nonSupporting = Set(bricks).subtracting(supports.keys)
+        
+        return nonSupporting.count + canBeDisintigrated.count
+    }
+    
+    func getBricksSupportingButCanBeDisintegrated(supports: [Brick : [Brick]]) -> [Brick] {
+        let beingSupportedBy = supports.reversedMappings()
+        
+        let canBeDisintigrated = supports.keys.filter{ brick in
+            let needsSupporting = supports[brick]!
+            return needsSupporting.allSatisfy({ beingSupportedBy[$0]!.count > 1 })
+        }
+        
+        return canBeDisintigrated
+    }
+    
+    func getSupportingBricks(bricks: [Brick]) -> [Brick : [Brick]] {
         let orderedClosestToFloor = bricks.sorted(by: { lhs, rhs in
             lhs.lowestZ < rhs.lowestZ
         })
@@ -48,18 +67,7 @@ class Day22Test : XCTestCase {
             }
         })
         
-        let beingSupportedBy = supports.reversedMappings()
-        
-        let canBeDisintigrated = supports.keys.filter{ brick in
-            let needsSupporting = supports[brick]!
-            return needsSupporting.allSatisfy({ beingSupportedBy[$0]!.count > 1 })
-        }
-        
-        // Get non supporting
-        let allBricks = Set(orderedClosestToFloor)
-        let nonSupporting = allBricks.subtracting(supports.keys)
-        
-        return nonSupporting.count + canBeDisintigrated.count
+        return supports
     }
     
     struct Brick: Equatable, Hashable {
