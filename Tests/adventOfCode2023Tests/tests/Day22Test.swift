@@ -14,6 +14,134 @@ class Day22Test : XCTestCase {
         XCTAssertEqual(407, bricksThatCanBeDisintegrated(bricks: bricks))
     }
     
+    func testPart2Dummy() {
+        let bricks = parseData(data: day22DummyData.lines)
+//        XCTAssertEqual(7, getTotalBricksThatCauseFall(bricks: bricks))
+    }
+    
+    func testPart2() {
+        let bricks = parseData(data: day22Data.lines)
+//        XCTAssertEqual(59266, getTotalBricksThatCauseFall(bricks: bricks))
+    }
+    
+    class Graph {
+        var adjacencyList: [Brick: [Brick]]
+        var parentCount: [Brick: Int]
+
+        init() {
+            adjacencyList = [Brick: [Brick]]()
+            parentCount = [Brick: Int]()
+        }
+
+        func addEdge(from source: Brick, to destination: Brick) {
+            if adjacencyList[source] == nil {
+                adjacencyList[source] = [Brick]()
+            }
+            adjacencyList[source]?.append(destination)
+
+            parentCount[destination, default: 0] += 1
+        }
+        
+        func findAllRootNodes(for node: Brick) -> Set<Brick> {
+                var visited = Set<Brick>()
+                var rootNodes = Set<Brick>()
+
+                func findRoots(currentNode: Brick) {
+                    visited.insert(currentNode)
+                    var isRoot = true
+
+                    for (vertex, edges) in adjacencyList {
+                        if edges.contains(currentNode) {
+                            isRoot = false
+                            if !visited.contains(vertex) {
+                                findRoots(currentNode: vertex)
+                            }
+                        }
+                    }
+
+                    if isRoot {
+                        rootNodes.insert(currentNode)
+                    }
+                }
+
+                findRoots(currentNode: node)
+                return rootNodes
+        }
+        
+        func exclusiveDescendantsOfNode(_ node: Brick) -> [Brick] {
+            var exclusiveDescendants = Set<Brick>()
+
+            func findExclusiveDescendants(of node: Brick) {
+                guard let children = adjacencyList[node] else { return }
+
+                for child in children {
+                    if parentCount[child] == 1 {
+                        exclusiveDescendants.insert(child)
+                        findExclusiveDescendants(of: child)
+                    }
+                }
+            }
+
+            findExclusiveDescendants(of: node)
+            return Array(exclusiveDescendants)
+        }
+    }
+    
+    func testBricks() {
+        let bricks = parseData(data: day22DummyData.lines)
+        let supports = getSupportingBricks(bricks: bricks)
+//        let beingSupportedBy = supports.reversedMappings()
+        let brick1 = bricks.filter({$0.name == "1"}).first!
+        
+        let graph = Graph()
+        
+        supports.forEach({ kv in
+            kv.value.forEach({ to in
+                graph.addEdge(from: kv.key, to: to)
+            })
+        })
+        
+        
+        print(graph.exclusiveDescendantsOfNode(brick1).count)
+        
+//        let rootNodes = bricks.map{ brick in
+//            [brick : graph.findAllRootNodes(for: brick)]
+//        }
+
+//        print(rootNodes)
+    }
+    
+    func part2(bricks: [Brick]) -> Int {
+        let supports = getSupportingBricks(bricks: bricks)
+        let canBeDisintigrated = getBricksSupportingButCanBeDisintegrated(supports: supports)
+//        let candidates =
+        
+        return 0
+    }
+    
+//    func isBrickBeingSupported(brick: Brick, disintegrated: [Brick], supports: [Brick: [Brick]], beingSupportedBy: [Brick: [Brick]]) -> Bool {
+//        let brickBeingSupportedBy = beingSupportedBy[brick, default: []]
+//        let remainingBricks = Set(brickBeingSupportedBy).subtracting(disintegrated)
+//        
+//        return remainingBricks.count != 0
+//    }
+//    
+//    func checkBricks(bricks: [Brick], disintegrated: [Brick], supports: [Brick: [Brick]], beingSupportedBy: [Brick: [Brick]]) -> Set<Brick> {
+//        
+//        let bricksToDisintegrate = bricks.filter({!isBrickBeingSupported(brick: $0, disintegrated: disintegrated, supports: supports, beingSupportedBy: beingSupportedBy)})
+//        
+//        let children =  bricksToDisintegrate.map{ checkBricks(bricks: supports[$0, default: []], disintegrated: disintegrated + bricksToDisintegrate, supports: supports, beingSupportedBy: beingSupportedBy) }
+//        
+//        if children.isEmpty {
+//            return Set(disintegrated)
+//        }
+//        else {
+//            return foldl(sequence: children, base: Set<Brick>()) { acc, item in acc.union(item) }
+//        }
+//    }
+    
+    // ---
+    
     func bricksThatCanBeDisintegrated(bricks: [Brick]) -> Int {
         let supports = getSupportingBricks(bricks: bricks)
         let canBeDisintigrated = getBricksSupportingButCanBeDisintegrated(supports: supports)
