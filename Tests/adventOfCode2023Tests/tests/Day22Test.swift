@@ -15,143 +15,96 @@ class Day22Test : XCTestCase {
     }
     
     func testPart2Dummy() {
-        let bricks = parseData(data: day22DummyData.lines)
+        let bricks = Set(parseData(data: day22DummyData.lines))
         XCTAssertEqual(7, disintegrateBricks(allBricks: bricks))
     }
     
     func testPart2() {
-        let bricks = parseData(data: day22Data.lines)
-//        XCTAssertEqual(59266, getTotalBricksThatCauseFall(bricks: bricks))
+        let bricks = Set(parseData(data: day22Data.lines))
+        XCTAssertEqual(59266, disintegrateBricks(allBricks: bricks))
     }
     
-    func testBricks() {
-        let bricks = parseData(data: day22DummyData.lines)
-        let supports = getSupportingBricks(bricks: bricks)
-//        let beingSupportedBy = supports.reversedMappings()
-        let brick1 = bricks.filter({$0.name == "1"}).first!
-        let brick2 = bricks.filter({$0.name == "2"}).first!
-        let brick7 = bricks.filter({$0.name == "7"}).first!
+    func testDis() {
+        let allBricks = Set(parseData(data: day22DummyData.lines))
+        let supports = getSupportingBricks(bricks: Array(allBricks))
+        let beingSupportedBy = supports.reversedMappings()
+        let brick1 = allBricks.filter({$0.name == "1"}).first!
         
-        let dag = DAG()
+        let result = bricksDisintegrated(startBrick: brick1, allBricks: allBricks, supports: supports, beingSupportedBy: beingSupportedBy)
         
-        supports.forEach({ kv in
-            kv.value.forEach({ to in
-                dag.addDependency(from: kv.key, to: to)
-            })
-        })
-        
-        
-        print(dag.getAllDescendants(of: brick1).count)
-        print(dag.getAllDescendants(of: brick2).count)
-        print(dag.getRootNodes(of: brick7).first!.name)
-        print(dag.getRootNodes(of: brick2).first!.name)
-        
-//        let rootNodes = bricks.map{ brick in
-//            [brick : graph.findAllRootNodes(for: brick)]
-//        }
-
-//        print(rootNodes)
+        print(result.count)
     }
     
-    func disintegrateBricks(allBricks: [Brick]) -> Int {
-        let supports = getSupportingBricks(bricks: allBricks)
+    func disintegrateBricks(allBricks: Set<Brick>) -> Int {
+        let supports = getSupportingBricks(bricks: Array(allBricks))
         let beingSupportedBy = supports.reversedMappings()
         let canBeDisintigrated = getBricksSupportingButCanBeDisintegrated(supports: supports)
-        let nonSupporting = Set(allBricks).subtracting(supports.keys)
         let candidates = Set(supports.keys).subtracting(canBeDisintigrated)
-        
-        let results = candidates.map{ checkBricks(brick: $0, disintegrated: Set([$0]), supports: supports, beingSupportedBy: beingSupportedBy) }
-        let resultCount = results.map{ $0.count - 1}
+   
+        let results = candidates.map{ bricksDisintegrated(startBrick: $0, allBricks: allBricks, supports: supports, beingSupportedBy: beingSupportedBy) }
+        let resultCount = results.map{ $0.count }
         
         return resultCount.reduce(0, +)
     }
     
-    func isBrickBeingSupported(brick: Brick, disintegrated: Set<Brick>, supports: [Brick: [Brick]], beingSupportedBy: [Brick: [Brick]]) -> Bool {
-        let brickBeingSupportedBy = beingSupportedBy[brick, default: []]
-        let remainingBricks = Set(brickBeingSupportedBy).subtracting(disintegrated)
-
-        return remainingBricks.count != 0
-    }
-
-    func checkBricks(brick: Brick, disintegrated: Set<Brick>, supports: [Brick: [Brick]], beingSupportedBy: [Brick: [Brick]]) -> Set<Brick> {
-
-        // is brick being supported ? If not disintigrate and continue
-        if !isBrickBeingSupported(brick: brick, disintegrated: disintegrated, supports: supports, beingSupportedBy: beingSupportedBy) {
-            let updatedDisintegrated = disintegrated.union([brick])
+    func bricksDisintegrated(startBrick: Brick, allBricks: Set<Brick>, supports: [Brick: [Brick]], beingSupportedBy: [Brick: [Brick]]) -> Set<Brick> {
+        var disintegratedBricks = Set([startBrick])
+        var fixedBricks = Set<Brick>()
+        var nodes = supports[startBrick, default: []]
+        
+        while !nodes.isEmpty {
+            let node = nodes.removeFirst()
             
-            if let children = supports[brick] {
-                let childResults = children.map{ checkBricks(brick: $0, disintegrated: updatedDisintegrated, supports: supports, beingSupportedBy: beingSupportedBy) }
-                return foldl(sequence: childResults, base: updatedDisintegrated) { acc, item in acc.union(item) }
-            }
-            else {
-                // No children just return the set upto this point
-                return updatedDisintegrated
+            if canDisintegrate(brick: node, beingSupportedBy: beingSupportedBy, disintegratedBricks: &disintegratedBricks, fixedBricks: &fixedBricks) {
+                nodes.append(contentsOf: supports[node, default: []])
             }
         }
-        else {
-            // Brick is supported so just stop here
-            return disintegrated
-        }
+        
+        return disintegratedBricks.subtracting([startBrick])
     }
     
-    class DAG {
-        var dependencies: [Brick: [Brick]]
-        var reverseDependencies: [Brick: [Brick]]
+    func canDisintegrate(brick: Brick, 
+                        beingSupportedBy: [Brick: [Brick]],
+                        disintegratedBricks: inout Set<Brick>,
+                        fixedBricks: inout Set<Brick>
+    ) -> Bool {
         
-        init() {
-            dependencies = [:]
-            reverseDependencies = [:]
-        }
+        var nodes = [brick]
         
-        // Add a dependency (edge) from one brick to another
-        func addDependency(from parent: Brick, to child: Brick) {
-            dependencies[parent, default: []].append(child)
-            reverseDependencies[child, default: []].append(parent)
-        }
-        
-        // Function to get all descendants of a brick
-        func getAllDescendants(of brick: Brick) -> [Brick] {
-            var descendants = [Brick]()
-            var visited = Set<Brick>()
+        while !nodes.isEmpty {
+            let node = nodes.removeFirst()
             
-            func dfs(_ brick: Brick) {
-                visited.insert(brick)
-                if let children = dependencies[brick] {
-                    for child in children {
-                        if !visited.contains(child) {
-                            descendants.append(child)
-                            dfs(child)
-                        }
-                    }
+            if fixedBricks.contains(node) {
+                return false
+            }
+            else if disintegratedBricks.contains(node) {
+                return true
+            }
+            else {
+                // Get supporting nodes
+                let supports = beingSupportedBy[node, default: []]
+                
+                if supports.isEmpty {
+                    // We are at a root node, so consider supported
+                    fixedBricks.insert(node)
+                }
+                else if supports.anySatisfy({ fixedBricks.contains($0) }) {
+                    // We have a fixed brick in the parents, so state we are fixed
+                    fixedBricks.insert(node)
+                }
+                else if supports.allSatisfy({ disintegratedBricks.contains($0) }) {
+                    // All supports disintegrated
+                    disintegratedBricks.insert(node)
+                }
+                else {
+                    // Process supports and reinsert
+                    nodes.insert(node, at: 0)
+                    nodes.insert(contentsOf: supports, at: 0)
                 }
             }
-            
-            dfs(brick)
-            return descendants
         }
         
-        // Function to get all root nodes for a given brick
-        func getRootNodes(of brick: Brick) -> [Brick] {
-            var roots = [Brick]()
-            var visited = Set<Brick>()
-            
-            func dfs(_ brick: Brick) {
-                visited.insert(brick)
-                if let parents = reverseDependencies[brick], !parents.isEmpty {
-                    for parent in parents {
-                        if !visited.contains(parent) {
-                            dfs(parent)
-                        }
-                    }
-                } else {
-                    // If a brick has no parents, it's a root node
-                    roots.append(brick)
-                }
-            }
-            
-            dfs(brick)
-            return roots
-        }
+        return disintegratedBricks.contains(brick)
     }
     
     // ---

@@ -163,4 +163,13 @@ extension Array where Element: Equatable & Hashable {
 
         return pairs
     }
+    
+    func anySatisfy(_ predicate: (Element) -> Bool) -> Bool {
+        for element in self {
+            if predicate(element) {
+                return true
+            }
+        }
+        return false
+    }
 }
