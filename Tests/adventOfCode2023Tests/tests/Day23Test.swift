@@ -14,6 +14,16 @@ class Day23Test : XCTestCase {
         XCTAssertEqual(2394, longestPath(scenery: scenery))
     }
     
+    func testPart2Dummy() {
+        let scenery = parseData(lines: day23DummyData.lines)
+        XCTAssertEqual(154, longestPathIgnoreSlopes(scenery: scenery))
+    }
+    
+    func testPart2() {
+        let scenery = parseData(lines: day23Data.lines)
+        XCTAssertEqual(154, longestPathIgnoreSlopes(scenery: scenery))
+    }
+    
     func longestPath(scenery: [[Day23Test.Ground]]) -> Int {
         let start = Point(scenery.first!.enumerated().first(where: { $0.1 == .Path })!.0, 0)
         let end = Point(scenery.last!.enumerated().first(where: { $0.1 == .Path })!.0, scenery.count-1)
@@ -45,6 +55,55 @@ class Day23Test : XCTestCase {
             
             if let nextLocation = sceneryDict[Point(current.x + 1, current.y)] {
                 if nextLocation == .Right || nextLocation == .Path {
+                    nextNodes.insert(Point(current.x + 1, current.y))
+                }
+            }
+            
+            return nextNodes
+        }
+        
+        let isEndpoint: (Point) -> Bool = { point in
+            point == end
+        }
+        
+        let longestPath = dg.findLongestPath(startingAt: start, determineNextNodes: determineNextNodes, isEndpoint: isEndpoint)
+        
+//        printPoints(data: sceneryDict, path: longestPath, width: scenery[0].count, height: scenery.count)
+        
+        return longestPath.count-1
+    }
+    
+    func longestPathIgnoreSlopes(scenery: [[Day23Test.Ground]]) -> Int {
+        let start = Point(scenery.first!.enumerated().first(where: { $0.1 == .Path })!.0, 0)
+        let end = Point(scenery.last!.enumerated().first(where: { $0.1 == .Path })!.0, scenery.count-1)
+        let sceneryValues = scenery.enumerated().flatMap{ (y, row) in
+            row.enumerated().map{ (x, item) in (Point(x,y), item) }
+        }
+        let sceneryDict = Dictionary(uniqueKeysWithValues: sceneryValues)
+        let dg = DynamicGraph()
+        let determineNextNodes: (Point) -> Set<Point> = { current in
+            var nextNodes = Set<Point>()
+            
+            if let nextLocation = sceneryDict[Point(current.x, current.y - 1)] {
+                if nextLocation != .Forest {
+                    nextNodes.insert(Point(current.x, current.y - 1))
+                }
+            }
+            
+            if let nextLocation = sceneryDict[Point(current.x, current.y + 1)] {
+                if nextLocation != .Forest {
+                    nextNodes.insert(Point(current.x, current.y + 1))
+                }
+            }
+            
+            if let nextLocation = sceneryDict[Point(current.x - 1, current.y)] {
+                if nextLocation != .Forest {
+                    nextNodes.insert(Point(current.x - 1, current.y))
+                }
+            }
+            
+            if let nextLocation = sceneryDict[Point(current.x + 1, current.y)] {
+                if nextLocation != .Forest {
                     nextNodes.insert(Point(current.x + 1, current.y))
                 }
             }
