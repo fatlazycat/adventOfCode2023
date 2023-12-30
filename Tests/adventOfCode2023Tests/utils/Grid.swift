@@ -51,6 +51,47 @@ struct Point3D: Equatable, Hashable {
         y = yVal
         z = zVal
     }
+    
+    func ignoreZPlane() -> Point {
+        Point(x, y)
+    }
+}
+
+struct DoublePoint: Equatable, Hashable {
+    let x: Double
+    let y: Double
+    
+    init(_ xVal: Double, _ yVal: Double) {
+        x = xVal
+        y = yVal
+    }
+    
+    init(_ xVal: Int, _ yVal: Int) {
+        x = Double(xVal)
+        y = Double(yVal)
+    }
+}
+
+struct DoublePoint3D: Equatable, Hashable {
+    let x: Double
+    let y: Double
+    let z: Double
+    
+    init(_ xVal: Double, _ yVal: Double, _ zVal: Double) {
+        x = xVal
+        y = yVal
+        z = zVal
+    }
+    
+    init(_ xVal: Int, _ yVal: Int, _ zVal: Int) {
+        x = Double(xVal)
+        y = Double(yVal)
+        z = Double(zVal)
+    }
+    
+    func ignoreZPlane() -> DoublePoint {
+        DoublePoint(x, y)
+    }
 }
 
 func getGrid(s: String) -> Dictionary<Point, Int> {
