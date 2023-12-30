@@ -22,7 +22,7 @@ extension Array where Element: Equatable & Hashable {
         arrayCopy.remove(at: index)
         return arrayCopy
     }
-
+    
     func appendElement(_ element: Element) -> Array {
         var arrayCopy = self
         arrayCopy.append(element)
@@ -46,7 +46,7 @@ extension Array where Element: Equatable & Hashable {
     func sub(_ bounds: ClosedRange<Int>) -> Array {
         return Array(self[bounds])
     }
-
+    
     func sub(_ bounds: PartialRangeFrom<Int>) -> Array {
         return Array(self[bounds])
     }
@@ -74,9 +74,9 @@ extension Array where Element: Equatable & Hashable {
                 result[item] = 1
             }
         }
-      
+        
         return result
-      }
+    }
     
     func count(where predicate: (Element) throws -> Bool) rethrows -> Int {
         var count = 0
@@ -160,7 +160,7 @@ extension Array where Element: Equatable & Hashable {
                 pairs.append((firstElement, secondElement))
             }
         }
-
+        
         return pairs
     }
     
@@ -172,4 +172,17 @@ extension Array where Element: Equatable & Hashable {
         }
         return false
     }
+    
+    func allPairings() -> [(Element, Element)] {
+        var pairings: [(Element, Element)] = []
+        
+        for (i, element1) in self.enumerated() {
+            for element2 in self[(i + 1)...] {
+                pairings.append((element1, element2))
+            }
+        }
+        
+        return pairings
+    }
+    
 }
