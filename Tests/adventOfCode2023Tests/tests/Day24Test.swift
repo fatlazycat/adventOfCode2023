@@ -41,7 +41,44 @@ class Day24Test : XCTestCase {
                 x >= min && x <= max &&
                 y >= min && y <= max
     }
-
+    
+    // Had enough for part 2 and used python
+    
+//    import sympy
+//
+//
+//    def read_file_to_array(file_path):
+//        with open(file_path, 'r') as file:
+//            # Read all lines in the file and store them in an array
+//            lines = file.readlines()
+//            # Optionally, you can strip newline characters from each line
+//            lines = [line.strip() for line in lines]
+//        return lines
+//
+//
+//    lines_array = read_file_to_array("data")
+//
+//    print("count of lines = ", len(lines_array))
+//
+//    hailstones = [tuple(map(int, line.replace("@", ",").split(","))) for line in lines_array]
+//
+//    xr, yr, zr, vxr, vyr, vzr = sympy.symbols("xr, yr, zr, vxr, vyr, vzr")
+//
+//    equations = []
+//
+//    for i, (sx, sy, sz, vx, vy, vz) in enumerate(hailstones):
+//        equations.append((xr - sx) * (vy - vyr) - (yr - sy) * (vx - vxr))
+//        equations.append((yr - sy) * (vz - vzr) - (zr - sz) * (vy - vyr))
+//        if i < 2:
+//            continue
+//        answers = [soln for soln in sympy.solve(equations) if all(x % 1 == 0 for x in soln.values())]
+//        if len(answers) == 1:
+//            break
+//
+//    answer = answers[0]
+//
+//    print(answer[xr] + answer[yr] + answer[zr])
+//    print(i)
     
     struct Hailstone: Equatable, Hashable {
         let point: DoublePoint
